@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "list.h"
 
 #define PLUS '+'
@@ -31,7 +32,7 @@ int get_number_of_formulas() {
     int user_input_value = 0;
 
     // ask a user to provide a value
-    printf("Number of formulas: ");
+//    printf("Number of formulas: ");
 
     // proceed to checking the input
     while (1) {
@@ -71,20 +72,13 @@ const char* reserved_functions() {
             max_function
     };
 
-//    const char *functions[] = {
-//            if_function,
-//            n_function,
-//            min_function,
-//            max_function
-//    };
-
     return *functions;
 
 };
 
 
 // compare input letters to a predefined function name
-size_t compare_to_function_name(int *symbol_ascii) {
+size_t compare_to_function_name(int symbol_ascii) {
 
     // get an array of reserved functions
     const char *functions = reserved_functions();
@@ -95,7 +89,7 @@ size_t compare_to_function_name(int *symbol_ascii) {
 
         for (size_t j = 0; current_function[j] != '\0'; j++) {
 
-            if (*symbol_ascii == current_function[j]) {
+            if (symbol_ascii == current_function[j]) {
 
                 if (current_function[j + 2] == '\0') {
                     return i;  // return the index of a function name
@@ -115,71 +109,141 @@ size_t compare_to_function_name(int *symbol_ascii) {
 }
 
 
-void check_operator_type(int symbol_ascii) {
+void logic(List** stack, List** rpn, int value, int priority, int holds_operand, int** flag) {
 
-    // we do this if block to "sort out" symbols by their priorities
+    List* new_stack = *stack;
+    List* new_rpn = *rpn;
+    int* new_flag = *flag;
 
-    // if the symbol is a '+' or a '-'
-    if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
-        // create a node
-        // set its priority to 1
-        // push();
-        printf("THIS IS A PLUS/MINUS: %c\n", symbol_ascii);
-    }
+    if (new_stack != NULL) {
 
-        // if the symbol is a '*' or a '/'
-    else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
-        // create a node
-        // set priority to 2
-        // push();
-        printf("THIS IS AN ASTERISK/SLASH: %c\n", symbol_ascii);
-    }
+        Node* iterator = new_stack->head;
 
-        // if the symbol is a capital letter (i.e. a part of a function name)
-    else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH) {
+        if (iterator != NULL) {
 
-        // get an array of reserved functions
-        const char *functions = reserved_functions();
+            do {
+                Node* popped = pop(new_stack);
 
-        size_t function_id = compare_to_function_name(&symbol_ascii);
+//                printf("POPPED OPERATOR: %c\n", popped->value);
 
-        const char function = functions[function_id];
+                if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
+//                    printf("POPPED OPERATOR (%c) IS '(' OR ...", popped->value);
+                    push(new_stack, popped->value, popped->priority, popped->holds_operand);
+                    break;
+                }
 
-        // TODO: do we need to skip some symbols? yes. DONE
+//                printf("POPPED OPERATOR (%c) IS NOT '(' OR ...\n", popped->value);
 
-        printf("THIS IS A FUNCTION: %c\n", symbol_ascii);
+                if (new_rpn != NULL) {
+//                    printf("PUT NEW OPERATOR TO RPN");
+                    put(new_rpn, popped->value, popped->priority, popped->holds_operand, new_flag);
+                }
 
-        // create a node
-        // set priority to 3
-        // push(function)
+                iterator = iterator->next;
 
-    }
+            } while (iterator != NULL);
 
-        // if the symbol is a parentheses
-    else if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
-
-        // create a node
-        // set priority to 4
-        // push()
-
-        printf("THIS IS A PARENTHESIS: %c\n", symbol_ascii);
-
-    }
-
-        // if the symbol is something that shouldn't be considered at all
-    else {
-        printf("THIS IS SOMETHING THAT SHOULD NOT BE PARSED: '%c'\n", symbol_ascii);
+//            while(iterator->next != NULL) { // !!!
+//                Node* popped = pop(new_stack);
+//                if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
+//                    push(new_stack, popped->value, popped->priority, popped->holds_operand);
+//                    break;
+//                }
+//
+//                if (new_rpn != NULL) {
+//                    put(new_rpn, popped->value, popped->priority, popped->holds_operand);
+//                }
+//                iterator = iterator->next;
+//            }
+        }
+        push(new_stack, value, priority, holds_operand);
     }
 
 }
 
 
+// check what operator was passed
+void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
+
+    const int holds_operand = 0;
+
+    // we do this if block to "sort out" symbols by their priorities
+
+    // if the symbol is a parentheses
+    if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
+
+        const int priority = 4;
+
+        if (symbol_ascii == OPEN_PARENTHESES) push(stack, symbol_ascii, priority, holds_operand);
+
+        if (symbol_ascii == CLOSE_PARENTHESES) {
+
+            Node* iterator = stack->head;
+
+            while(iterator->next != NULL) {
+                Node* popped = pop(stack);
+                if (popped->value == OPEN_PARENTHESES) break;
+                else {
+                    put(rpn, symbol_ascii, priority, holds_operand, flag);
+                }
+                iterator = iterator->next;
+            }
+
+        }
+
+    }
+
+    // if the symbol is a '+' or a '-'
+    else if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
+        const int priority = 1;
+        logic(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
+    }
+
+    // if the symbol is a '*' or a '/'
+    else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
+        const int priority = 2;
+        logic(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
+    }
+
+    // if the symbol is a capital letter (i.e. a part of a function name)
+    else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH) {
+
+        // get an array of reserved functions
+//        const char *functions = reserved_functions();
+//
+//        size_t function_id = compare_to_function_name(symbol_ascii);
+//
+//        // get the necessary name
+//        const char function = functions[function_id];
+//
+//        // TODO: HOW TO SAVE A STRING?
+//
+////        const int priority = 3;
+////
+////        push(stack, function, priority);
+
+        printf("THIS IS A FUNCTION: %c\n", symbol_ascii);
+
+    }
+
+}
+
+
+// parse the formula
 void get_formula() {
 
     int symbol_ascii;
     int symbol_value = 0;
 
     const char STOP_SYMBOL = '.';
+
+    int parsing_operand = 0;
+
+    List stack = {NULL, NULL};
+
+    List rpn = {NULL, NULL};
+
+    int flag = 0;
 
     while(1) {
 
@@ -196,18 +260,47 @@ void get_formula() {
         // if the symbol is a number, get its value and print it
         if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
             symbol_value = symbol_value * FACTOR + (symbol_ascii - ASCII_DIGIT_RANGE_START);
-            printf("THIS IS A DIGIT: %d\n", symbol_value);
-            symbol_value = 0;
+            parsing_operand = 1;
         }
 
-            // if the symbol is an operator
+        // if the symbol is an operator
         else {
-            check_operator_type(symbol_ascii);
+
+            // check if all the numbers in row were parsed, then print the complete number at once
+            if (parsing_operand) {
+
+                const int priority = 0;
+                const int holds_operand= 1;
+
+                put(&rpn, symbol_value, priority, holds_operand, &flag);
+
+//                printf("THIS IS AN OPERAND: %d\n", symbol_value);
+                symbol_value = 0;
+                parsing_operand = 0;
+            }
+
+            check_operator_type(symbol_ascii, &stack, &rpn, &flag);
+
         }
 
     }
 
+    Node* iterator = stack.head;
+
+    while(iterator->next != NULL) {
+
+        Node* popped = pop(&stack);
+
+        const int holds_operand = popped->holds_operand;
+
+        put(&rpn, popped->value, popped->priority, holds_operand, &flag);
+        iterator = iterator->next;
+    }
+
+    print(&rpn);
+
 };
+
 
 int main() {
 
@@ -215,7 +308,7 @@ int main() {
     const int number_of_formulas = get_number_of_formulas();
 
     for (int counter = 0; counter < number_of_formulas; counter++) {
-        printf("Provide your infix formula:\n");
+        printf("\nProvide your infix formula:\n");
         get_formula();
     }
 
