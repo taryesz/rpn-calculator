@@ -34,7 +34,7 @@ int get_number_of_formulas() {
     printf("Number of formulas: ");
 
     // proceed to checking the input
-    while (true) {
+    while (1) {
 
         // get the input
         user_input_ascii = getchar();
@@ -59,17 +59,24 @@ int get_number_of_formulas() {
 // create an array of reserved functions' names
 const char* reserved_functions() {
 
-    const char if_function[] = "IF";
-    const char n_function[] = "N";
-    const char min_function[] = "MIN";
-    const char max_function[] = "MAX";
+    static const char if_function[] = "IF";
+    static const char n_function[] = "N";
+    static const char min_function[] = "MIN";
+    static const char max_function[] = "MAX";
 
-    const char *functions[] = {
+    static const char* const functions[] = {
             if_function,
             n_function,
             min_function,
             max_function
     };
+
+//    const char *functions[] = {
+//            if_function,
+//            n_function,
+//            min_function,
+//            max_function
+//    };
 
     return *functions;
 
@@ -174,7 +181,7 @@ void get_formula() {
 
     const char STOP_SYMBOL = '.';
 
-    while(true) {
+    while(1) {
 
         // input a symbol
         symbol_ascii = getchar();
