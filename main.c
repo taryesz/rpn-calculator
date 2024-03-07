@@ -252,7 +252,6 @@ void get_formula() {
 
         // check the type of this symbol (operand, operator, part of a function or something else)
 
-        // if the symbol is a dot, stop the loop
         if (symbol_ascii == STOP_SYMBOL) {
             break;
         }
@@ -285,17 +284,17 @@ void get_formula() {
 
     }
 
-    Node* iterator = stack.head;
-
-    while(iterator->next != NULL) {
-
-        Node* popped = pop(&stack);
-
-        const int holds_operand = popped->holds_operand;
-
-        put(&rpn, popped->value, popped->priority, holds_operand, &flag);
-        iterator = iterator->next;
-    }
+//    Node* iterator = stack.head;
+//
+//    while(iterator->next != NULL) {
+//
+//        Node* popped = pop(&stack);
+//
+//        const int holds_operand = popped->holds_operand;
+//
+//        put(&rpn, popped->value, popped->priority, holds_operand, &flag);
+//        iterator = iterator->next;
+//    }
 
     print(&rpn);
 
