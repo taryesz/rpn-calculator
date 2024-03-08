@@ -143,12 +143,12 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
     // we do this if block to "sort out" symbols by their priorities
 
-     if (symbol_ascii == '.') {
-         // push the last element located on 'stack'
-         if (stack->head != NULL) {
+    if (symbol_ascii == '.') {
+        // push the last element located on 'stack'
+        if (stack->head != NULL) {
             logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
-         }
-         return;
+        }
+        return;
     }
     // if the symbol is a parentheses
 
@@ -166,7 +166,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
                 Node* popped = pop(stack);
                 if (popped->value == OPEN_PARENTHESES) break;
                 else {
-                    put(rpn, symbol_ascii, priority, holds_operand, flag);
+                    put(rpn, popped->value, priority, holds_operand, flag);
                 }
                 iterator = iterator->next;
             }
@@ -176,19 +176,19 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
     }
 
-    // if the symbol is a '+' or a '-'
+        // if the symbol is a '+' or a '-'
     else if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
         const int priority = 1;
         logic(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
     }
 
-    // if the symbol is a '*' or a '/'
+        // if the symbol is a '*' or a '/'
     else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
         const int priority = 2;
         logic(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
     }
 
-    // if the symbol is a capital letter (i.e. a part of a function name)
+        // if the symbol is a capital letter (i.e. a part of a function name)
     else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH) {
 
         // get an array of reserved functions
@@ -237,7 +237,7 @@ void get_formula(List* stack, List* rpn) {
             parsing_operand = 1;
         }
 
-        // if the symbol is an operator
+            // if the symbol is an operator
         else {
 
             // check if all the numbers in row were parsed, then print the complete number at once
