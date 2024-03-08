@@ -211,7 +211,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
 
 // parse the formula
-void get_formula() {
+void get_formula(List* stack, List* rpn) {
 
     int symbol_ascii;
     int symbol_value = 0;
@@ -219,10 +219,6 @@ void get_formula() {
     const char STOP_SYMBOL = '.';
 
     int parsing_operand = 0;
-
-    List stack = {NULL, NULL};
-
-    List rpn = {NULL, NULL};
 
     int flag = 0;
 
@@ -248,14 +244,14 @@ void get_formula() {
                 const int priority = 0;
                 const int holds_operand= 1;
 
-                put(&rpn, symbol_value, priority, holds_operand, &flag);
+                put(rpn, symbol_value, priority, holds_operand, &flag);
 
                 symbol_value = 0;
                 parsing_operand = 0;
 
             }
 
-            check_operator_type(symbol_ascii, &stack, &rpn, &flag);
+            check_operator_type(symbol_ascii, stack, rpn, &flag);
 
         }
 
@@ -265,18 +261,85 @@ void get_formula() {
 
     }
 
-    print(&rpn);
+    print(rpn);
 
 };
 
 
+void calculate_rpn(List* rpn) {
+
+    // weź element wyrażenia
+    // jeżeli to operand połóż go na stosie [ put() ]
+    // jeżeli to operator
+    //      zdejmij ze stosu odpowiednią liczbę operandów
+    //      wykonaj obliczenia
+    //      odłóż wynik na stos [ push() ]
+    // wynik znajduje się na górze stosu
+
+    // do we need to clear 'stack'?
+    List stack = {NULL, NULL};
+
+    Node* iterator = rpn->head;
+
+//    printf("START OF RPN: %c (%d)\n", iterator->value, iterator->value);
+
+    do {
+
+        iterator = pop(rpn);
+        // pop(rpn);
+
+        if (iterator->holds_operand) {
+            // put()
+            int flag = 0; // TODO: change this
+            put(&stack, iterator->value, iterator->priority, iterator->holds_operand, &flag);
+            printf("PUT A NUMBER (%d) ON STACK\n", iterator->value);
+        }
+        else {
+
+            printf("THIS IS AN OPERATOR (%c)\n", iterator->value);
+            // check how many operands we need to get
+            // for now, i will use 2 because the basic tests are with binary operators
+
+            Node* first = pop(&stack); // 1
+            printf("FIRST: %d\n", first->value);
+
+            Node* second = pop(&stack); // 5
+            printf("SECOND: %d\n", second->value);
+
+            if (iterator->value == ASTERISK) {
+                int result = first->value * second->value;
+                printf("RESULT OF MULTIPLY: %d\n", result);
+                // push(result)
+                const int priority = 0;
+                const int holds_operand = 1;
+                push(rpn, result, priority, holds_operand);
+                printf("PUT RESULT ON RPN\n");
+            }
+
+        }
+
+        iterator = iterator->next;
+    }
+    while (iterator != NULL);
+
+    printf("PRINTING RPN:\n");
+    print(rpn);
+
+}
+
+
 int main() {
+
+    // initialize stack for operators and rpn-stack for rpn formula
+    List stack = {NULL, NULL};
+    List rpn = {NULL, NULL};
 
     // get the number of formulas from a user
     const int number_of_formulas = get_number_of_formulas();
 
     for (int counter = 0; counter < number_of_formulas; counter++) {
-        get_formula();
+        get_formula(&stack, &rpn);
+        calculate_rpn(&rpn);
     }
 
     return 0;
