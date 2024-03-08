@@ -18,6 +18,8 @@
 #define ASCII_LETTER_RANGE_START 65
 #define ASCII_LETTER_RANGE_FINISH 90
 
+#define DIVISOR 0
+
 
 // inspiration: https://www.geeksforgeeks.org/program-that-allows-integer-input-only/
 int get_number_of_formulas() {
@@ -266,63 +268,72 @@ void get_formula(List* stack, List* rpn) {
 };
 
 
+void execute_operation(List* rpn, int result) {
+    const int priority = 0;
+    const int holds_operand = 1;
+    push(rpn, result, priority, holds_operand);
+}
+
+
 void calculate_rpn(List* rpn) {
 
-    // weź element wyrażenia
-    // jeżeli to operand połóż go na stosie [ put() ]
-    // jeżeli to operator
-    //      zdejmij ze stosu odpowiednią liczbę operandów
-    //      wykonaj obliczenia
-    //      odłóż wynik na stos [ push() ]
-    // wynik znajduje się na górze stosu
-
-    // do we need to clear 'stack'?
     List stack = {NULL, NULL};
-
     Node* iterator = rpn->head;
-
-//    printf("START OF RPN: %c (%d)\n", iterator->value, iterator->value);
 
     do {
 
         iterator = pop(rpn);
-        // pop(rpn);
 
         if (iterator->holds_operand) {
-            // put()
             int flag = 0; // TODO: change this
             put(&stack, iterator->value, iterator->priority, iterator->holds_operand, &flag);
-            printf("PUT A NUMBER (%d) ON STACK\n", iterator->value);
         }
         else {
 
-            printf("THIS IS AN OPERATOR (%c)\n", iterator->value);
             // check how many operands we need to get
-            // for now, i will use 2 because the basic tests are with binary operators
+            // for now, I will use 2 because the basic tests are with binary operators
+
+            printf("%c ", iterator->value);
 
             Node* first = pop(&stack); // 1
-            printf("FIRST: %d\n", first->value);
 
             Node* second = pop(&stack); // 5
-            printf("SECOND: %d\n", second->value);
+
+            printf("%d %d", second->value, first->value);
+
+            printf("\n");
 
             if (iterator->value == ASTERISK) {
                 int result = first->value * second->value;
-                printf("RESULT OF MULTIPLY: %d\n", result);
-                // push(result)
-                const int priority = 0;
-                const int holds_operand = 1;
-                push(rpn, result, priority, holds_operand);
-                printf("PUT RESULT ON RPN\n");
+                execute_operation(rpn, result);
+            }
+            else if (iterator->value == SLASH) {
+
+                if (second->value == DIVISOR) {
+                    printf("ERROR\n");
+                }
+                else {
+                    int result = first->value / second->value;
+                    execute_operation(rpn, result);
+                }
+
+            }
+            else if (iterator->value == PLUS) {
+                int result = first->value + second->value;
+                execute_operation(rpn, result);
+            }
+            else if (iterator->value == MINUS) {
+                int result = first->value - second->value;
+                execute_operation(rpn, result);
             }
 
         }
 
         iterator = iterator->next;
+
     }
     while (iterator != NULL);
 
-    printf("PRINTING RPN:\n");
     print(rpn);
 
 }
