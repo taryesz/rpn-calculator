@@ -16,6 +16,7 @@ typedef struct {
     Node* tail;
 } List;
 
+
 Node* pop(List* stack) {
 
     // if the stack is empty:
@@ -42,22 +43,6 @@ Node* pop(List* stack) {
 
     }
 
-//    if (stack->head != NULL) {
-//
-//        if (stack->head->next == NULL) {
-//            stack->head = NULL;
-//            stack->tail = NULL;
-//        }
-//        else {
-//            stack->head->next->previous = NULL;
-//            return stack->head;
-//        }
-//
-//    }
-//    else {
-//        return NULL;
-//    }
-//    return NULL;
 }
 
 
@@ -186,6 +171,8 @@ void print(List* stack) {
 
     Node* iterator = stack->head;
 
+    if (iterator == NULL) return;
+
     do {
 
         if (iterator->holds_operand) {
@@ -199,6 +186,7 @@ void print(List* stack) {
 
     }
     while(iterator != NULL);
+
     printf("\n");
 
 }

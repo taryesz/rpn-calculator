@@ -299,32 +299,42 @@ void calculate_rpn(List* rpn) {
 
             Node* second = pop(&stack); // 5
 
-            printf("%d %d", second->value, first->value);
+            if (first != NULL && second != NULL) printf("%d %d", second->value, first->value);
 
             printf("\n");
 
             if (iterator->value == ASTERISK) {
-                int result = first->value * second->value;
-                execute_operation(rpn, result);
+                if (first != NULL && second != NULL) {
+                    int result = first->value * second->value;
+                    execute_operation(rpn, result);
+                }
             }
             else if (iterator->value == SLASH) {
 
-                if (second->value == DIVISOR) {
-                    printf("ERROR\n");
-                }
-                else {
-                    int result = first->value / second->value;
-                    execute_operation(rpn, result);
+                if (second != NULL) {
+                    if (second->value == DIVISOR) {
+                        printf("ERROR\n");
+                    }
+                    else {
+                        if (first != NULL) {
+                            int result = first->value / second->value;
+                            execute_operation(rpn, result);
+                        }
+                    }
                 }
 
             }
             else if (iterator->value == PLUS) {
-                int result = first->value + second->value;
-                execute_operation(rpn, result);
+                if (first != NULL && second != NULL) {
+                    int result = first->value + second->value;
+                    execute_operation(rpn, result);
+                }
             }
             else if (iterator->value == MINUS) {
-                int result = first->value - second->value;
-                execute_operation(rpn, result);
+                if (first != NULL && second != NULL) {
+                    int result = first->value - second->value;
+                    execute_operation(rpn, result);
+                }
             }
 
         }
@@ -335,6 +345,7 @@ void calculate_rpn(List* rpn) {
     while (iterator != NULL);
 
     print(rpn);
+    printf("\n");
 
 }
 
@@ -351,6 +362,10 @@ int main() {
     for (int counter = 0; counter < number_of_formulas; counter++) {
         get_formula(&stack, &rpn);
         calculate_rpn(&rpn);
+        rpn.head = NULL;
+        rpn.tail = NULL;
+        stack.head = NULL;
+        stack.tail = NULL;
     }
 
     return 0;
