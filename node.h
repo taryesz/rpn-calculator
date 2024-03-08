@@ -11,8 +11,9 @@
 typedef struct Node {
 
     int value;
-    int index;
+    int priority;
+    int holds_operand;
     struct Node* next;
     struct Node* previous;
 
-} *Node;
+} Node;
