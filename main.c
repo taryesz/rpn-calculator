@@ -31,9 +31,6 @@ int get_number_of_formulas() {
     // this variable stores a value of an input
     int user_input_value = 0;
 
-    // ask a user to provide a value
-//    printf("Number of formulas: ");
-
     // proceed to checking the input
     while (1) {
 
@@ -115,14 +112,10 @@ void logic(List** stack, List** rpn, int value, int priority, int holds_operand,
     List* new_rpn = *rpn;
     int* new_flag = *flag;
 
-//    if (new_stack != NULL) {
-
     Node* iterator = new_stack->head;
 
-//        if (iterator != NULL) {
-
-//    do {
     while (iterator != NULL) {
+
         Node* popped = pop(new_stack);
 
         if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
@@ -130,9 +123,7 @@ void logic(List** stack, List** rpn, int value, int priority, int holds_operand,
             break;
         }
 
-//        if (new_rpn != NULL) {
         put(new_rpn, popped->value, popped->priority, popped->holds_operand, new_flag);
-//        }
 
         iterator = iterator->next;
 
@@ -151,11 +142,10 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
     // we do this if block to "sort out" symbols by their priorities
 
      if (symbol_ascii == '.') {
-        // push the last element located on 'stack'
-        int last = stack->head->value;
-        int pr = stack->head->priority;
-        int ho = stack->head->holds_operand;
-        logic(&stack, &rpn, last, pr, ho, &flag);
+         // push the last element located on 'stack'
+         if (stack->head != NULL) {
+            logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
+         }
          return;
     }
     // if the symbol is a parentheses
@@ -275,18 +265,6 @@ void get_formula() {
 
     }
 
-//    Node* iterator = stack.head;
-//
-//    while(iterator->next != NULL) {
-//
-//        Node* popped = pop(&stack);
-//
-//        const int holds_operand = popped->holds_operand;
-//
-//        put(&rpn, popped->value, popped->priority, holds_operand, &flag);
-//        iterator = iterator->next;
-//    }
-
     print(&rpn);
 
 };
@@ -298,7 +276,6 @@ int main() {
     const int number_of_formulas = get_number_of_formulas();
 
     for (int counter = 0; counter < number_of_formulas; counter++) {
-//        printf("\nProvide your infix formula:\n");
         get_formula();
     }
 

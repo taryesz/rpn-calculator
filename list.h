@@ -117,41 +117,6 @@ void push(List* stack, int value, int priority, int holds_operand) {
 
     }
 
-//
-//    // check if the stack is empty:
-////    if (stack->head == NULL) {
-////
-////        // our input node becomes both a head and a tail:
-////        stack->head = node;
-////        stack->tail = node;
-////
-////    }
-////    // if the stack is not empty:
-////    else {
-//
-//        node->previous = NULL;
-//        node->next = stack->head;
-//
-//        if (stack->head != NULL) {
-//            stack->head->previous = node;
-//        }
-//
-//        // set new node's next as the old head
-////        node->next = stack->head;
-////
-////        // set new node's previous as NULL
-////        node->previous = NULL;
-////
-////        // set old head's previous as new node
-////        stack->head->previous = node;
-////
-////        // set head of the stack as new node
-////        stack->head = node;
-//
-////    }
-//
-////    free(node);
-
 }
 
 
@@ -205,53 +170,14 @@ void put(List* stack, int value, int priority, int holds_operand, int* flag) {
             stack->tail->previous = saved_tail;
             stack->tail->next = NULL;
 
-            // !!!!!!!
-            // if not flag
-            // stack->head->next = saved_tail;
-            // else nothing
-
             if (flag == 0) {
                 stack->head->next = saved_tail;
                 *flag = 1;
             }
 
-//            stack->head->next = saved_tail;
-
         }
 
     }
-
-    // check if the stack is empty:
-//    if (stack->head == NULL) {
-//
-//        // our input node becomes both a head and a tail:
-//        stack->head = node;
-//        stack->tail = node;
-//
-//    }
-//    else {
-//
-//        node->previous = stack->tail;
-//
-//        if (stack->tail != NULL) {
-//            stack->tail->next = node;
-//        }
-
-        // set new node's next as NULL
-//        node->next = NULL;
-//
-//        // set new node's previous as the old tail
-//        node->previous = stack->tail;
-//
-//        // set old tail's next as new node
-//        stack->tail->next = node;
-
-        // set tail of the stack as new node
-//        stack->tail = node;
-
-//    }
-
-//    free(node);
 
 }
 
@@ -269,10 +195,10 @@ void print(List* stack) {
             printf("%c ", iterator->value);
         }
 
-//        printf("ITERATOR: %d / %c\n", iterator->value, iterator->value);
         iterator = iterator->next;
 
     }
     while(iterator != NULL);
+    printf("\n");
 
 }
