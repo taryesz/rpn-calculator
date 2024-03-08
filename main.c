@@ -115,51 +115,32 @@ void logic(List** stack, List** rpn, int value, int priority, int holds_operand,
     List* new_rpn = *rpn;
     int* new_flag = *flag;
 
-    if (new_stack != NULL) {
+//    if (new_stack != NULL) {
 
-        Node* iterator = new_stack->head;
+    Node* iterator = new_stack->head;
 
-        if (iterator != NULL) {
+//        if (iterator != NULL) {
 
-            do {
-                Node* popped = pop(new_stack);
+//    do {
+    while (iterator != NULL) {
+        Node* popped = pop(new_stack);
 
-//                printf("POPPED OPERATOR: %c\n", popped->value);
-
-                if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
-//                    printf("POPPED OPERATOR (%c) IS '(' OR ...", popped->value);
-                    push(new_stack, popped->value, popped->priority, popped->holds_operand);
-                    break;
-                }
-
-//                printf("POPPED OPERATOR (%c) IS NOT '(' OR ...\n", popped->value);
-
-                if (new_rpn != NULL) {
-//                    printf("PUT NEW OPERATOR TO RPN");
-                    put(new_rpn, popped->value, popped->priority, popped->holds_operand, new_flag);
-                }
-
-                iterator = iterator->next;
-
-            } while (iterator != NULL);
-
-//            while(iterator->next != NULL) { // !!!
-//                Node* popped = pop(new_stack);
-//                if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
-//                    push(new_stack, popped->value, popped->priority, popped->holds_operand);
-//                    break;
-//                }
-//
-//                if (new_rpn != NULL) {
-//                    put(new_rpn, popped->value, popped->priority, popped->holds_operand);
-//                }
-//                iterator = iterator->next;
-//            }
+        if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
+            push(new_stack, popped->value, popped->priority, popped->holds_operand);
+            break;
         }
-        push(new_stack, value, priority, holds_operand);
-    }
 
-}
+//        if (new_rpn != NULL) {
+        put(new_rpn, popped->value, popped->priority, popped->holds_operand, new_flag);
+//        }
+
+        iterator = iterator->next;
+
+    };
+
+    push(new_stack, value, priority, holds_operand);
+
+};
 
 
 // check what operator was passed
@@ -169,7 +150,16 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
     // we do this if block to "sort out" symbols by their priorities
 
+     if (symbol_ascii == '.') {
+        // push the last element located on 'stack'
+        int last = stack->head->value;
+        int pr = stack->head->priority;
+        int ho = stack->head->holds_operand;
+        logic(&stack, &rpn, last, pr, ho, &flag);
+         return;
+    }
     // if the symbol is a parentheses
+
     if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
 
         const int priority = 4;
@@ -180,7 +170,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
             Node* iterator = stack->head;
 
-            while(iterator->next != NULL) {
+            do {
                 Node* popped = pop(stack);
                 if (popped->value == OPEN_PARENTHESES) break;
                 else {
@@ -188,6 +178,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
                 }
                 iterator = iterator->next;
             }
+            while(iterator != NULL);
 
         }
 
@@ -252,10 +243,6 @@ void get_formula() {
 
         // check the type of this symbol (operand, operator, part of a function or something else)
 
-        if (symbol_ascii == STOP_SYMBOL) {
-            break;
-        }
-
         // if the symbol is a number, get its value and print it
         if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
             symbol_value = symbol_value * FACTOR + (symbol_ascii - ASCII_DIGIT_RANGE_START);
@@ -273,13 +260,17 @@ void get_formula() {
 
                 put(&rpn, symbol_value, priority, holds_operand, &flag);
 
-//                printf("THIS IS AN OPERAND: %d\n", symbol_value);
                 symbol_value = 0;
                 parsing_operand = 0;
+
             }
 
             check_operator_type(symbol_ascii, &stack, &rpn, &flag);
 
+        }
+
+        if (symbol_ascii == STOP_SYMBOL) {
+            break;
         }
 
     }
@@ -307,7 +298,7 @@ int main() {
     const int number_of_formulas = get_number_of_formulas();
 
     for (int counter = 0; counter < number_of_formulas; counter++) {
-        printf("\nProvide your infix formula:\n");
+//        printf("\nProvide your infix formula:\n");
         get_formula();
     }
 
