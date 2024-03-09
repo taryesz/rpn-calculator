@@ -64,19 +64,35 @@ int get_number_of_formulas() {
 // create an array of reserved functions' names
 const char* reserved_functions() {
 
-    static const char if_function[] = "IF";
-    static const char n_function[] = "N";
-    static const char min_function[] = "MIN";
-    static const char max_function[] = "MAX";
+        static const char if_function[] = "IF";
+        static const char n_function[] = "N";
+        static const char min_function[] = "MIN";
+        static const char max_function[] = "MAX";
 
-    static const char* const functions[] = {
-            if_function,
-            n_function,
-            min_function,
-            max_function
-    };
+        static const char* const functions[] = {
+                if_function,
+                n_function,
+                min_function,
+                max_function
+        };
 
-    return *functions;
+        return *functions;
+
+//    char* if_function = "IF";
+//    char* n_function = "N";
+//    char* min_function = "MIN";
+//    char* max_function = "MAX";
+//
+//    char** functions;
+//
+//    functions = (char**) calloc(4, sizeof(char*));
+//
+//    functions[0] = if_function;
+//    functions[1] = n_function;
+//    functions[2] = min_function;
+//    functions[3] = max_function;
+//
+//    return functions;
 
 };
 
@@ -85,7 +101,7 @@ const char* reserved_functions() {
 size_t compare_to_function_name(int symbol_ascii) {
 
     // get an array of reserved functions
-    const char *functions = reserved_functions();
+    const char* functions = reserved_functions();
 
     // iterate through every function's name and compare their symbols
     for (size_t i = 0; i < sizeof(&functions) / sizeof(functions[0]); i++) {
@@ -106,7 +122,11 @@ size_t compare_to_function_name(int symbol_ascii) {
 
         }
 
+//        free((void *)current_function);  // ?
+
     }
+
+//    free((void *)functions);  // ?
 
     return -1;
 
@@ -115,28 +135,29 @@ size_t compare_to_function_name(int symbol_ascii) {
 
 void logic(List** stack, List** rpn, int value, int priority, int holds_operand, int** flag) {
 
-    List* new_stack = *stack;
-    List* new_rpn = *rpn;
-    int* new_flag = *flag;
+//    List* new_stack = *stack;
+//    List* new_rpn = *rpn;
+//    int* new_flag = *flag;
 
-    Node* iterator = new_stack->head;
+    Node* iterator = (*stack)->head;
 
     while (iterator != NULL) {
 
-        Node* popped = pop(new_stack);
+        Node* popped = pop(*stack);
 
         if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
-            push(new_stack, popped->value, popped->priority, popped->holds_operand);
+            push(*stack, popped->value, popped->priority, popped->holds_operand);
             break;
         }
 
-        put(new_rpn, popped->value, popped->priority, popped->holds_operand, new_flag);
+        put(*rpn, popped->value, popped->priority, popped->holds_operand, *flag);
 
         iterator = iterator->next;
 
     };
 
-    push(new_stack, value, priority, holds_operand);
+    push(*stack, value, priority, holds_operand);
+    free(iterator);
 
 };
 
@@ -148,26 +169,16 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
     // we do this if block to "sort out" symbols by their priorities
 
+    // if the symbol is a dot, make sure to push the rest of the symbols
     if (symbol_ascii == '.') {
-        // push the last element located on 'stack'
-//        pop(stack);
-
         while (stack->head != NULL) {
             logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
             pop(stack);
         }
-
-//        do {
-//            logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
-//        } while (stack->head != NULL);
-
-//        if (stack->head != NULL) {
-//            logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
-//        }
         return;
     }
-    // if the symbol is a parentheses
 
+    // if the symbol is a parentheses
     if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
 
         const int priority = 4;
@@ -185,8 +196,11 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
                     put(rpn, popped->value, priority, holds_operand, flag);
                 }
                 iterator = iterator->next;
+                free(popped);
             }
             while(iterator != NULL);
+
+            free(iterator);
 
         }
 
@@ -351,6 +365,9 @@ void calculate_rpn(List* rpn) {
                 }
             }
 
+            free(first);
+            free(second);
+
         }
 
         iterator = iterator->next;
@@ -360,6 +377,7 @@ void calculate_rpn(List* rpn) {
 
     print(rpn);
     printf("\n");
+    free(iterator);
 
 }
 

@@ -51,7 +51,7 @@ void push(List* stack, int value, int priority, int holds_operand) {
     // O(1) version
 
     // create and initiate the node:
-    Node* node = malloc(sizeof(Node));
+    Node* node = (Node*)malloc(sizeof(Node));
     node->value = value;
     node->priority = priority;
 
@@ -98,9 +98,13 @@ void push(List* stack, int value, int priority, int holds_operand) {
 
             stack->tail->previous = saved_head;
 
+//            free(saved_head);
+
         }
 
     }
+
+//    free(node);
 
 }
 
@@ -110,7 +114,7 @@ void put(List* stack, int value, int priority, int holds_operand, int* flag) {
     // O(1) version
 
     // create and initiate the node:
-    Node* node = malloc(sizeof(Node));
+    Node* node = (Node*)malloc(sizeof(Node));
     node->value = value;
     node->priority = priority;
 
@@ -160,9 +164,13 @@ void put(List* stack, int value, int priority, int holds_operand, int* flag) {
                 *flag = 1;
             }
 
+//            free(saved_tail);
+
         }
 
     }
+
+//    free(node);
 
 }
 
@@ -188,5 +196,6 @@ void print(List* stack) {
     while(iterator != NULL);
 
     printf("\n");
+    free(iterator);
 
 }
