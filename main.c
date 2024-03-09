@@ -1,12 +1,10 @@
-// TODO: debug calculations
-// TODO: implement functions
-
-
+// headers:
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "list.h"
 
+// operators
 #define PLUS '+'
 #define MINUS '-'
 #define ASTERISK '*'
@@ -14,15 +12,17 @@
 #define OPEN_PARENTHESES '('
 #define CLOSE_PARENTHESES ')'
 
-// define constants needed to convert an ascii into its according value
+// ascii ranges (digits and capital letters)
 #define ASCII_DIGIT_RANGE_START 48
 #define ASCII_DIGIT_RANGE_FINISH 57
-
-#define FACTOR 10
-
 #define ASCII_LETTER_RANGE_START 65
 #define ASCII_LETTER_RANGE_FINISH 90
 
+// factor needed to perform a formula of conversion
+// from a numeric ascii to its value
+#define FACTOR 10
+
+// critical divisor (to catch cases when trying to divide by zero)
 #define CRITICAL_DIVISOR 0
 
 
@@ -407,17 +407,54 @@ void check_priority_change(List* stack, Node** first_operand, Node** second_oper
     // if there was a priority change
     if (number_of_operands > 2) {
 
-        // save the first element that doesn't participate in an operation
-        Node* first = pop(stack);
+        // create and set the variable to 2 since
+        // we need to skip the first two operands that
+        // will participate in the operation
+        int counter = 2;
+
+        // create a node in which we will store
+        // temporarily popped values from the stack
+        Node* popped;
+
+        // create a temporary stack which will
+        // store temporary popped values from the stack
+        // to insert them later to the original stack back
+        List temporary_stack = {NULL, NULL};
+
+        // here we skip two values that will be used in the operation
+        // but others will be needed to be popped and then pushed back in
+        do {
+
+            // get the top symbol from the operations stack
+            popped = pop(stack);
+
+            // push the symbol to a temporary stack
+            push(&temporary_stack, popped->value, popped->priority, popped->holds_operand);
+
+            // increment the variable
+            counter++;
+
+        } while (counter != number_of_operands);
 
         // get the necessary operands
         *first_operand = pop(stack);
         *second_operand = pop(stack);
 
-        // push the saved operand back, we don't need to lose it
-        push(stack, first->value, first->priority, first->holds_operand);
+        // create an iterator that will go through the whole temporary stack
+        Node* iterator = temporary_stack.head;
 
-        free(first);
+        // while there are elements in the temporary stack
+        do {
+
+            // push a symbol back to the original stack
+            push(stack, iterator->value, iterator->priority, iterator->holds_operand);
+
+            iterator = iterator->next;
+
+        } while (iterator != NULL);
+
+        free(popped);
+        free(iterator);
 
     }
     // if there was no priority change
