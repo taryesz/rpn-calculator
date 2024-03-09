@@ -1,3 +1,8 @@
+// TODO: figure out why some tests parse the last operator and some don't
+// TODO: debug calculations
+// TODO: implement functions
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "list.h"
@@ -145,9 +150,20 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
     if (symbol_ascii == '.') {
         // push the last element located on 'stack'
-        if (stack->head != NULL) {
+//        pop(stack);
+
+        while (stack->head != NULL) {
             logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
+            pop(stack);
         }
+
+//        do {
+//            logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
+//        } while (stack->head != NULL);
+
+//        if (stack->head != NULL) {
+//            logic(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
+//        }
         return;
     }
     // if the symbol is a parentheses
@@ -229,15 +245,13 @@ void get_formula(List* stack, List* rpn) {
         // input a symbol
         symbol_ascii = getchar();
 
-        // check the type of this symbol (operand, operator, part of a function or something else)
-
         // if the symbol is a number, get its value and print it
         if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
             symbol_value = symbol_value * FACTOR + (symbol_ascii - ASCII_DIGIT_RANGE_START);
             parsing_operand = 1;
         }
 
-            // if the symbol is an operator
+        // if the symbol is an operator
         else {
 
             // check if all the numbers in row were parsed, then print the complete number at once
@@ -360,12 +374,12 @@ int main() {
     const int number_of_formulas = get_number_of_formulas();
 
     for (int counter = 0; counter < number_of_formulas; counter++) {
-        get_formula(&stack, &rpn);
-        calculate_rpn(&rpn);
         rpn.head = NULL;
         rpn.tail = NULL;
+        get_formula(&stack, &rpn);
         stack.head = NULL;
         stack.tail = NULL;
+        calculate_rpn(&rpn);
     }
 
     return 0;
