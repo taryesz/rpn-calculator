@@ -104,8 +104,6 @@ void push(List* stack, int value, int priority, int holds_operand) {
 
     }
 
-//    free(node);
-
 }
 
 
