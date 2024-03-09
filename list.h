@@ -46,7 +46,7 @@ Node* pop(List* stack) {
 }
 
 
-void push(List* stack, int value, int priority, int holds_operand) {
+void push(List* stack, int value, int priority, int holds_operand, int arity) {
 
     // O(1) version
 
@@ -54,6 +54,7 @@ void push(List* stack, int value, int priority, int holds_operand) {
     Node* node = (Node*)malloc(sizeof(Node));
     node->value = value;
     node->priority = priority;
+    node->arity = arity;
 
 
     if (holds_operand) {
@@ -107,7 +108,7 @@ void push(List* stack, int value, int priority, int holds_operand) {
 }
 
 
-void put(List* stack, int value, int priority, int holds_operand, int* flag) {
+void put(List* stack, int value, int priority, int holds_operand, int arity, int* flag) {
 
     // O(1) version
 
@@ -115,6 +116,7 @@ void put(List* stack, int value, int priority, int holds_operand, int* flag) {
     Node* node = (Node*)malloc(sizeof(Node));
     node->value = value;
     node->priority = priority;
+    node->arity = arity;
 
     if (holds_operand) {
         node->holds_operand = 1;

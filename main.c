@@ -23,7 +23,10 @@
 #define FACTOR 10
 
 // critical divisor (to catch cases when trying to divide by zero)
-#define CRITICAL_DIVISOR 0
+#define ZERO 0
+
+// functions
+#define NEGATE 'N'
 
 
 // inspiration: https://www.geeksforgeeks.org/program-that-allows-integer-input-only/
@@ -131,7 +134,7 @@ int get_number_of_formulas() {
 
 
 // saving operators on the RPN stack
-void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds_operand, int** flag) {
+void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds_operand, int arity, int** flag) {
 
     // create an iterator that will go through the whole stack
     Node* iterator = (*stack)->head;
@@ -146,7 +149,7 @@ void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds
         if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
 
             // push the popped symbol to the stack
-            push(*stack, popped->value, popped->priority, popped->holds_operand);
+            push(*stack, popped->value, popped->priority, popped->holds_operand, popped->arity);
 
             // stop the saving process
             break;
@@ -154,14 +157,14 @@ void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds
         }
 
         // put the popped symbol to the RPN stack if it's valid for this
-        put(*rpn, popped->value, popped->priority, popped->holds_operand, *flag);
+        put(*rpn, popped->value, popped->priority, popped->holds_operand, popped->arity, *flag);
 
         iterator = iterator->next;
 
     };
 
     // push the originally pushed symbol to the stack
-    push(*stack, value, priority, holds_operand);
+    push(*stack, value, priority, holds_operand, arity);
 
     free(iterator);
 
@@ -181,7 +184,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
         while (stack->head != NULL) {
 
             // push the rest of the operators to the stack
-            convert_to_rpn(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, &flag);
+            convert_to_rpn(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, stack->head->arity, &flag);
 
             // remove the pushed operator from the stack
             pop(stack);
@@ -194,6 +197,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
     }
 
     int priority = INFINITY;
+    int arity = INFINITY;
 
     // if the symbol is a parenthesis
     if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
@@ -202,7 +206,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
         priority = 4;
 
         // if the symbol is a '(', just push it to the operators stack
-        if (symbol_ascii == OPEN_PARENTHESES) push(stack, symbol_ascii, priority, holds_operand);
+        if (symbol_ascii == OPEN_PARENTHESES) push(stack, symbol_ascii, priority, holds_operand, arity);
 
         // if the symbol is a ')'
         if (symbol_ascii == CLOSE_PARENTHESES) {
@@ -219,11 +223,11 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
                 // if the symbol is a '(', stop the loop
                 if (popped->value == OPEN_PARENTHESES) break;
 
-                // if the symbol is something else
+                    // if the symbol is something else
                 else {
 
                     // save the symbol to the RPN stack
-                    put(rpn, popped->value, priority, holds_operand, flag);
+                    put(rpn, popped->value, priority, holds_operand, popped->arity, flag);
 
                 }
 
@@ -242,17 +246,25 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
     // if the symbol is a '+' or a '-', set the according priority and push to RPN stack
     else if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
         priority = 1;
-        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
+        arity = 2;
+        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
     }
 
     // if the symbol is a '*' or a '/', set the according priority and push to RPN stack
     else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
         priority = 2;
-        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, &flag);
+        arity = 2;
+        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
     }
 
     // if the symbol is a capital letter (i.e. a part of a function name)
     else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH) {
+
+        if (symbol_ascii == NEGATE) {
+            priority = 3;
+            arity = 1;
+            convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
+        }
 
         // TODO: implement function support
 
@@ -293,7 +305,7 @@ void get_formula(List* stack, List* rpn) {
 
         }
 
-        // if the symbol is an operator
+            // if the symbol is an operator
         else {
 
             // check if the last parsed symbol was a digit
@@ -302,9 +314,10 @@ void get_formula(List* stack, List* rpn) {
                 // give the operand its properties
                 const int priority = 0;
                 const int holds_operand = 1;
+                const int arity = INFINITY;
 
                 // save the operand to the RPN stack
-                put(rpn, symbol_value, priority, holds_operand, &flag);
+                put(rpn, symbol_value, priority, holds_operand, arity, &flag);
 
                 // reset the variables
                 symbol_value = 0;
@@ -334,7 +347,8 @@ void get_formula(List* stack, List* rpn) {
 void execute_operation(List* rpn, int result) {
     const int priority = 0;
     const int holds_operand = 1;
-    push(rpn, result, priority, holds_operand);
+    const int arity = INFINITY;
+    push(rpn, result, priority, holds_operand, arity);
 }
 
 
@@ -353,7 +367,7 @@ List mirror_stack(List* stack) {
         if (iterator != NULL) {
 
             // push a symbol to the new mirrored stack
-            push(&mirrored_stack, iterator->value, iterator->priority, iterator->holds_operand);
+            push(&mirrored_stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity);
             iterator = iterator->next;
         }
 
@@ -402,15 +416,17 @@ void update_number_of_operands(List* stack, int* number_of_operands) {
 
 
 // check if the mathematical equation requires a priority change (imaginary parentheses)
-void check_priority_change(List* stack, Node** first_operand, Node** second_operand, int number_of_operands) {
+List check_priority_change(List* stack, int arity, int number_of_operands) {
+
+    List necessary_operands = {NULL, NULL};
 
     // if there was a priority change
-    if (number_of_operands > 2) {
+    if (number_of_operands > arity) {
 
         // create and set the variable to 2 since
         // we need to skip the first two operands that
         // will participate in the operation
-        int counter = 2;
+        int counter = arity;
 
         // create a node in which we will store
         // temporarily popped values from the stack
@@ -429,7 +445,7 @@ void check_priority_change(List* stack, Node** first_operand, Node** second_oper
             popped = pop(stack);
 
             // push the symbol to a temporary stack
-            push(&temporary_stack, popped->value, popped->priority, popped->holds_operand);
+            push(&temporary_stack, popped->value, popped->priority, popped->holds_operand, popped->arity);
 
             // increment the variable
             counter++;
@@ -437,8 +453,15 @@ void check_priority_change(List* stack, Node** first_operand, Node** second_oper
         } while (counter != number_of_operands);
 
         // get the necessary operands
-        *first_operand = pop(stack);
-        *second_operand = pop(stack);
+        for (int i = 0; i < arity; i++) {
+            Node* necessary_operand = pop(stack);
+            int flag = 0;
+            if (necessary_operand != NULL) {
+                put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
+                    necessary_operand->holds_operand, necessary_operand->arity, &flag);
+            }
+            free(necessary_operand);
+        }
 
         // create an iterator that will go through the whole temporary stack
         Node* iterator = temporary_stack.head;
@@ -447,7 +470,7 @@ void check_priority_change(List* stack, Node** first_operand, Node** second_oper
         do {
 
             // push a symbol back to the original stack
-            push(stack, iterator->value, iterator->priority, iterator->holds_operand);
+            push(stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity);
 
             iterator = iterator->next;
 
@@ -461,10 +484,21 @@ void check_priority_change(List* stack, Node** first_operand, Node** second_oper
     else {
 
         // get the necessary operands
-        *first_operand = pop(stack);
-        *second_operand = pop(stack);
+        for (int i = 0; i < arity; i++) {
+            Node* necessary_operand = pop(stack);
+            int flag = 0;
+            if (necessary_operand != NULL) {
+                put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
+                    necessary_operand->holds_operand, necessary_operand->arity, &flag);
+            }
+            free(necessary_operand);
+        }
+//        *first_operand = pop(stack);
+//        *second_operand = pop(stack);
 
     }
+
+    return necessary_operands;
 
 }
 
@@ -481,6 +515,10 @@ void calculate_rpn(List* rpn) {
     // create a variable to store the number of parsed operands per single operator
     int number_of_operands = 0;
 
+    // define arity of operators
+    const int unary = 1;
+    const int binary = 2;
+
     do {
 
         // get the first symbol from RPN equation
@@ -493,7 +531,7 @@ void calculate_rpn(List* rpn) {
             int flag = 0;
 
             // save the operand on stack
-            put(&stack, iterator->value, iterator->priority, iterator->holds_operand, &flag);
+            put(&stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity, &flag);
 
             // keep track of how many operands we have already put on stack
             ++number_of_operands;
@@ -514,56 +552,88 @@ void calculate_rpn(List* rpn) {
             // print the reversed stack that contains steps
             print(&operation_steps);
 
+            // create a variable to store the result of an operation and initiate it to infinity
+            int result = INFINITY;
+
+            List necessary_operands;
+
             // we are using binary operators, which means we need only two operands
-            Node* first_operand;
-            Node* second_operand;
+            if (iterator->arity == unary) {
 
-            // check how many operands we have on our stack
-            // i.e. if the parsed mathematical equation requires change of
-            // priority, or, as to say, imaginary parentheses.
-            // if there are more than two operands, it means that the priority change
-            // was encountered, and we need to change the order of getting
-            // operands from the stack
-            check_priority_change(&stack, &first_operand, &second_operand, number_of_operands);
+                necessary_operands = check_priority_change(&stack, unary, number_of_operands);
 
-            // since we popped two necessary operands, we have to update the number of them on the stack
-            update_number_of_operands(&stack, &number_of_operands);
+                // since we popped two necessary operands, we have to update the number of them on the stack
+                update_number_of_operands(&stack, &number_of_operands);
 
-            // if both operands exist
-            if (first_operand != NULL && second_operand != NULL) {
+                if (necessary_operands.head != NULL) {
 
-                // create a variable to store the result of an operation and initiate it to infinity
-                int result = INFINITY;
+                    // if the operator is a function 'N'
+                    if (iterator->value == NEGATE) {
 
-                // if the operator is an '*'
-                if (iterator->value == ASTERISK) result = first_operand->value * second_operand->value;
-                // if the operator is a '/'
-                else if (iterator->value == SLASH) {
+                        Node* popped = pop(&necessary_operands);
+                        result = ZERO - popped->value;
+                        int flag = 0;
 
-                    // if the divisor is 0
-                    if (second_operand->value == CRITICAL_DIVISOR) {
-                        printf("ERROR\n");
-                        return;
-                    }
-                    else {
-                        result = first_operand->value / second_operand->value;
+                        free(popped);
+
                     }
 
-                }
-                // if the operator is a '+'
-                else if (iterator->value == PLUS) result = first_operand->value + second_operand->value;
-                // if the operator is a '-'
-                else if (iterator->value == MINUS) result = first_operand->value - second_operand->value;
+                    if (result != INFINITY) {
+                        execute_operation(rpn, result);
+                    }
 
-                // if calculations are successful, push the result to the RPN stack
-                if (result != INFINITY) {
-                    execute_operation(rpn, result);
                 }
 
             }
+            else if (iterator->arity == binary) {
 
-            free(first_operand);
-            free(second_operand);
+                // check how many operands we have on our stack
+                // i.e. if the parsed mathematical equation requires change of
+                // priority, or, as to say, imaginary parentheses.
+                // if there are more than two operands, it means that the priority change
+                // was encountered, and we need to change the order of getting
+                // operands from the stack
+                necessary_operands = check_priority_change(&stack, binary, number_of_operands);
+
+                // since we popped two necessary operands, we have to update the number of them on the stack
+                update_number_of_operands(&stack, &number_of_operands);
+
+                // if both operands exist
+                if (necessary_operands.head != NULL && necessary_operands.tail != NULL) {
+
+                    Node* first_operand = pop(&necessary_operands);
+                    Node* second_operand = pop(&necessary_operands);
+
+                    // if the operator is an '*'
+                    if (iterator->value == ASTERISK) result = first_operand->value * second_operand->value;
+                    // if the operator is a '/'
+                    else if (iterator->value == SLASH) {
+
+                        // if the divisor is 0
+                        if (second_operand->value == ZERO) {
+                            printf("ERROR\n");
+                            return;
+                        } else {
+                            result = first_operand->value / second_operand->value;
+                        }
+
+                    }
+                    // if the operator is a '+'
+                    else if (iterator->value == PLUS) result = first_operand->value + second_operand->value;
+                    // if the operator is a '-'
+                    else if (iterator->value == MINUS) result = first_operand->value - second_operand->value;
+
+                    // if calculations are successful, push the result to the RPN stack
+                    if (result != INFINITY) {
+                        execute_operation(rpn, result);
+                    }
+
+                    free(first_operand);
+                    free(second_operand);
+
+                }
+
+            }
 
         }
 
