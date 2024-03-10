@@ -11,6 +11,7 @@
 #define SLASH '/'
 #define OPEN_PARENTHESES '('
 #define CLOSE_PARENTHESES ')'
+#define SPACE ' '
 
 // ascii ranges (digits and capital letters)
 #define ASCII_DIGIT_RANGE_START 48
@@ -172,7 +173,7 @@ void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds
 
 
 // check what operator was passed
-void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, const char STOP_SYMBOL) {
+void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, const char STOP_SYMBOL, int* negate_function_found) {
 
     // create a const to indicate that the symbol doesn't contain a numerical value
     const int holds_operand = 0;
@@ -264,6 +265,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
             priority = 3;
             arity = 1;
             convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
+            *negate_function_found = 1;
         }
 
         // TODO: implement function support
@@ -275,6 +277,9 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
 
 // parse the formula
 void get_formula(List* stack, List* rpn) {
+
+    int negate_function_found = 0;
+    int negate_functions_counter = 0;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -293,6 +298,8 @@ void get_formula(List* stack, List* rpn) {
         // get a symbol from a user
         int symbol_ascii = getchar();
 
+        if (symbol_ascii == SPACE) continue;
+
         // if the symbol is an ascii of a digit
         if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
 
@@ -305,7 +312,7 @@ void get_formula(List* stack, List* rpn) {
 
         }
 
-            // if the symbol is an operator
+        // if the symbol is an operator
         else {
 
             // check if the last parsed symbol was a digit
@@ -316,8 +323,21 @@ void get_formula(List* stack, List* rpn) {
                 const int holds_operand = 1;
                 const int arity = INFINITY;
 
+                if (negate_function_found == 1) {
+                    check_operator_type(OPEN_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
+                    negate_functions_counter += 1;
+                }
+
                 // save the operand to the RPN stack
                 put(rpn, symbol_value, priority, holds_operand, arity, &flag);
+
+//                if (symbol_ascii == CLOSE_PARENTHESES) {
+                    for (int i = 0; i < negate_functions_counter; i++) {
+                        check_operator_type(CLOSE_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
+                    }
+                negate_function_found = 0;
+                    negate_functions_counter = 0;
+//                }
 
                 // reset the variables
                 symbol_value = 0;
@@ -325,8 +345,13 @@ void get_formula(List* stack, List* rpn) {
 
             }
 
+            if (negate_function_found == 1) {
+                negate_functions_counter += 1;
+                check_operator_type(OPEN_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
+            }
+
             // if the symbol is not an ascii of a digit
-            check_operator_type(symbol_ascii, stack, rpn, &flag, STOP_SYMBOL);
+            check_operator_type(symbol_ascii, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
 
         }
 
@@ -493,8 +518,6 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
             }
             free(necessary_operand);
         }
-//        *first_operand = pop(stack);
-//        *second_operand = pop(stack);
 
     }
 
@@ -538,7 +561,7 @@ void calculate_rpn(List* rpn) {
 
         }
 
-        // if the parsed symbol is an operator
+            // if the parsed symbol is an operator
         else {
 
             // print the operator
@@ -606,7 +629,7 @@ void calculate_rpn(List* rpn) {
 
                     // if the operator is an '*'
                     if (iterator->value == ASTERISK) result = first_operand->value * second_operand->value;
-                    // if the operator is a '/'
+                        // if the operator is a '/'
                     else if (iterator->value == SLASH) {
 
                         // if the divisor is 0
@@ -618,9 +641,9 @@ void calculate_rpn(List* rpn) {
                         }
 
                     }
-                    // if the operator is a '+'
+                        // if the operator is a '+'
                     else if (iterator->value == PLUS) result = first_operand->value + second_operand->value;
-                    // if the operator is a '-'
+                        // if the operator is a '-'
                     else if (iterator->value == MINUS) result = first_operand->value - second_operand->value;
 
                     // if calculations are successful, push the result to the RPN stack
