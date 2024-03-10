@@ -29,6 +29,10 @@
 // functions
 #define NEGATE 'N'
 
+// boolean
+#define TRUE 1
+#define FALSE 0
+
 
 // inspiration: https://www.geeksforgeeks.org/program-that-allows-integer-input-only/
 int get_number_of_formulas() {
@@ -40,7 +44,7 @@ int get_number_of_formulas() {
     int user_input_value = 0;
 
     // proceed to checking the input
-    while (1) {
+    while (TRUE) {
 
         // get the input from a user
         int user_input_ascii = getchar();
@@ -176,7 +180,7 @@ void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds
 void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, const char STOP_SYMBOL, int* negate_function_found) {
 
     // create a const to indicate that the symbol doesn't contain a numerical value
-    const int holds_operand = 0;
+    const int holds_operand = FALSE;
 
     // if the symbol is a '.'
     if (symbol_ascii == STOP_SYMBOL) {
@@ -265,7 +269,7 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
             priority = 3;
             arity = 1;
             convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
-            *negate_function_found = 1;
+            *negate_function_found = TRUE;
         }
 
         // TODO: implement function support
@@ -275,10 +279,65 @@ void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, co
 }
 
 
+// check if there were any 'N' functions
+void negate_function_check(List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found, int* negate_functions_counter) {
+    if (*negate_function_found == TRUE) {
+        // add the missing open parenthesis
+        check_operator_type(OPEN_PARENTHESES, stack, rpn, flag, STOP_SYMBOL, negate_function_found);
+        // increment the number of 'N' functions
+        *negate_functions_counter += 1;
+    }
+}
+
+
+// check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
+void parentheses_autocomplete(List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found,
+                              int* negate_functions_counter, const int* symbol_value, int priority, int holds_operand, int arity) {
+
+    // check if there were any 'N' functions
+    negate_function_check(stack, rpn, STOP_SYMBOL, flag, negate_function_found, negate_functions_counter);
+
+    // save the operand to the RPN stack
+    put(rpn, *symbol_value, priority, holds_operand, arity, flag);
+
+    // here we need to close all the open parentheses - as many as there were 'N' functions
+    for (int i = 0; i < *negate_functions_counter; i++) {
+        check_operator_type(CLOSE_PARENTHESES, stack, rpn, flag, STOP_SYMBOL, negate_function_found);
+    }
+
+    // reset the variables
+    *negate_function_found = FALSE;
+    *negate_functions_counter = 0;
+
+}
+
+
+// check if the last parsed symbol was a digit
+void check_if_digit(int* parsing_operand, int* symbol_value, List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found, int* negate_functions_counter) {
+
+    // if the flag is set to true (if we are parsing a number currently)
+    if (*parsing_operand) {
+
+        // give the operand its properties
+        const int priority = 0;
+        const int holds_operand = TRUE;
+        const int arity = INFINITY;
+
+        // check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
+        parentheses_autocomplete(stack, rpn, STOP_SYMBOL, flag, negate_function_found, negate_functions_counter, symbol_value, priority, holds_operand, arity);
+
+        // reset the variables
+        *symbol_value = 0;
+        *parsing_operand = FALSE;
+
+    }
+}
+
+
 // parse the formula
 void get_formula(List* stack, List* rpn) {
 
-    int negate_function_found = 0;
+    int negate_function_found = FALSE;
     int negate_functions_counter = 0;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
@@ -288,12 +347,12 @@ void get_formula(List* stack, List* rpn) {
     const char STOP_SYMBOL = '.';
 
     // create a flag that will be set to '1' if the last symbol parsed was a digit
-    int parsing_operand = 0;
+    int parsing_operand = FALSE;
 
     // create a flag TODO: what was this supposed to do again?
-    int flag = 0;
+    int flag = FALSE;
 
-    while(1) {
+    while(TRUE) {
 
         // get a symbol from a user
         int symbol_ascii = getchar();
@@ -307,8 +366,8 @@ void get_formula(List* stack, List* rpn) {
             // conversion ascii to its according value
             symbol_value = symbol_value * FACTOR + (symbol_ascii - ASCII_DIGIT_RANGE_START);
 
-            // set the flag to '1'
-            parsing_operand = 1;
+            // set the flag to true
+            parsing_operand = TRUE;
 
         }
 
@@ -316,39 +375,10 @@ void get_formula(List* stack, List* rpn) {
         else {
 
             // check if the last parsed symbol was a digit
-            if (parsing_operand) {
+            check_if_digit(&parsing_operand, &symbol_value, stack, rpn, STOP_SYMBOL, &flag, &negate_function_found, &negate_functions_counter);
 
-                // give the operand its properties
-                const int priority = 0;
-                const int holds_operand = 1;
-                const int arity = INFINITY;
-
-                if (negate_function_found == 1) {
-                    check_operator_type(OPEN_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
-                    negate_functions_counter += 1;
-                }
-
-                // save the operand to the RPN stack
-                put(rpn, symbol_value, priority, holds_operand, arity, &flag);
-
-//                if (symbol_ascii == CLOSE_PARENTHESES) {
-                    for (int i = 0; i < negate_functions_counter; i++) {
-                        check_operator_type(CLOSE_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
-                    }
-                negate_function_found = 0;
-                    negate_functions_counter = 0;
-//                }
-
-                // reset the variables
-                symbol_value = 0;
-                parsing_operand = 0;
-
-            }
-
-            if (negate_function_found == 1) {
-                negate_functions_counter += 1;
-                check_operator_type(OPEN_PARENTHESES, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
-            }
+            // check if there are still 'N' functions left for us to handle parentheses
+            negate_function_check(stack, rpn, STOP_SYMBOL, &flag, &negate_function_found, &negate_functions_counter);
 
             // if the symbol is not an ascii of a digit
             check_operator_type(symbol_ascii, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
@@ -371,7 +401,7 @@ void get_formula(List* stack, List* rpn) {
 // add the result of an operation to RPN stack
 void execute_operation(List* rpn, int result) {
     const int priority = 0;
-    const int holds_operand = 1;
+    const int holds_operand = TRUE;
     const int arity = INFINITY;
     push(rpn, result, priority, holds_operand, arity);
 }
@@ -480,7 +510,7 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
         // get the necessary operands
         for (int i = 0; i < arity; i++) {
             Node* necessary_operand = pop(stack);
-            int flag = 0;
+            int flag = FALSE;
             if (necessary_operand != NULL) {
                 put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
                     necessary_operand->holds_operand, necessary_operand->arity, &flag);
@@ -511,7 +541,7 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
         // get the necessary operands
         for (int i = 0; i < arity; i++) {
             Node* necessary_operand = pop(stack);
-            int flag = 0;
+            int flag = FALSE;
             if (necessary_operand != NULL) {
                 put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
                     necessary_operand->holds_operand, necessary_operand->arity, &flag);
@@ -551,7 +581,7 @@ void calculate_rpn(List* rpn) {
         if (iterator->holds_operand) {
 
             // TODO: change this
-            int flag = 0;
+            int flag = FALSE;
 
             // save the operand on stack
             put(&stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity, &flag);
@@ -595,7 +625,7 @@ void calculate_rpn(List* rpn) {
 
                         Node* popped = pop(&necessary_operands);
                         result = ZERO - popped->value;
-                        int flag = 0;
+                        int flag = FALSE;
 
                         free(popped);
 
