@@ -58,10 +58,10 @@ void push(List* stack, int value, int priority, int holds_operand, int arity) {
 
 
     if (holds_operand) {
-        node->holds_operand = 1;
+        node->is_operand = 1;
     }
     else {
-        node->holds_operand = 0;
+        node->is_operand = 0;
     }
 
     // add to an empty stack
@@ -119,10 +119,10 @@ void put(List* stack, int value, int priority, int holds_operand, int arity, int
     node->arity = arity;
 
     if (holds_operand) {
-        node->holds_operand = 1;
+        node->is_operand = 1;
     }
     else {
-        node->holds_operand = 0;
+        node->is_operand = 0;
     }
 
     // add to an empty stack
@@ -183,7 +183,7 @@ void print(List* stack) {
 
     do {
 
-        if (iterator->holds_operand) {
+        if (iterator->is_operand) {
             printf("%d ", iterator->value);
         }
         else {

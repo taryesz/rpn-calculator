@@ -3,335 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include "list.h"
-
-// operators
-#define PLUS '+'
-#define MINUS '-'
-#define ASTERISK '*'
-#define SLASH '/'
-#define OPEN_PARENTHESES '('
-#define CLOSE_PARENTHESES ')'
-#define SPACE ' '
-
-// ascii ranges (digits and capital letters)
-#define ASCII_DIGIT_RANGE_START 48
-#define ASCII_DIGIT_RANGE_FINISH 57
-#define ASCII_LETTER_RANGE_START 65
-#define ASCII_LETTER_RANGE_FINISH 90
-
-// factor needed to perform a formula of conversion
-// from a numeric ascii to its value
-#define FACTOR 10
-
-// critical divisor (to catch cases when trying to divide by zero)
-#define ZERO 0
-
-// functions
-#define NEGATE 'N'
-
-// boolean
-#define TRUE 1
-#define FALSE 0
-
-
-// inspiration: https://www.geeksforgeeks.org/program-that-allows-integer-input-only/
-int get_number_of_formulas() {
-
-    // define a constant which will be a flag to stop the input
-    const char STOP_SYMBOL = '\n';
-
-    // this variable stores a value of an input
-    int user_input_value = 0;
-
-    // proceed to checking the input
-    while (TRUE) {
-
-        // get the input from a user
-        int user_input_ascii = getchar();
-
-        // convert ascii to its value
-        if (user_input_ascii >= ASCII_DIGIT_RANGE_START && user_input_ascii <= ASCII_DIGIT_RANGE_FINISH) {
-            user_input_value = user_input_value * FACTOR + (user_input_ascii - ASCII_DIGIT_RANGE_START);
-        }
-
-        // if pressed 'Enter', stop the loop
-        if (user_input_ascii == STOP_SYMBOL) {
-            break;
-        }
-
-    };
-
-    return (user_input_value);
-
-};
-
-
-// create an array of reserved functions' names
-//const char* reserved_functions() {
-//
-//        static const char if_function[] = "IF";
-//        static const char n_function[] = "N";
-//        static const char min_function[] = "MIN";
-//        static const char max_function[] = "MAX";
-//
-//        static const char* const functions[] = {
-//                if_function,
-//                n_function,
-//                min_function,
-//                max_function
-//        };
-//
-//        return *functions;
-//
-////    char* if_function = "IF";
-////    char* n_function = "N";
-////    char* min_function = "MIN";
-////    char* max_function = "MAX";
-////
-////    char** functions;
-////
-////    functions = (char**) calloc(4, sizeof(char*));
-////
-////    functions[0] = if_function;
-////    functions[1] = n_function;
-////    functions[2] = min_function;
-////    functions[3] = max_function;
-////
-////    return functions;
-//
-//};
-
-
-// compare input letters to a predefined function name
-//size_t compare_to_function_name(int symbol_ascii) {
-//
-//    // get an array of reserved functions
-//    const char* functions = reserved_functions();
-//
-//    // iterate through every function's name and compare their symbols
-//    for (size_t i = 0; i < sizeof(&functions) / sizeof(functions[0]); i++) {
-//        const char *current_function = &functions[i];
-//
-//        for (size_t j = 0; current_function[j] != '\0'; j++) {
-//
-//            if (symbol_ascii == current_function[j]) {
-//
-//                if (current_function[j + 2] == '\0') {
-//                    return i;  // return the index of a function name
-//                }
-//
-//            }
-//            else {
-//                break;
-//            }
-//
-//        }
-//
-////        free((void *)current_function);  // ?
-//
-//    }
-//
-////    free((void *)functions);  // ?
-//
-//    return -1;
-//
-//}
-
-
-// saving operators on the RPN stack
-void convert_to_rpn(List** stack, List** rpn, int value, int priority, int holds_operand, int arity, int** flag) {
-
-    // create an iterator that will go through the whole stack
-    Node* iterator = (*stack)->head;
-
-    // while there are elements on the stack
-    while (iterator != NULL) {
-
-        // get the top operator symbol from the stack
-        Node* popped = pop(*stack);
-
-        // if the popped symbol is a '(' or if it has a lower priority than the pushed symbol
-        if (popped->value == OPEN_PARENTHESES || popped->priority < priority) {
-
-            // push the popped symbol to the stack
-            push(*stack, popped->value, popped->priority, popped->holds_operand, popped->arity);
-
-            // stop the saving process
-            break;
-
-        }
-
-        // put the popped symbol to the RPN stack if it's valid for this
-        put(*rpn, popped->value, popped->priority, popped->holds_operand, popped->arity, *flag);
-
-        iterator = iterator->next;
-
-    };
-
-    // push the originally pushed symbol to the stack
-    push(*stack, value, priority, holds_operand, arity);
-
-    free(iterator);
-
-};
-
-
-// check what operator was passed
-void check_operator_type(int symbol_ascii, List* stack, List* rpn, int* flag, const char STOP_SYMBOL, int* negate_function_found) {
-
-    // create a const to indicate that the symbol doesn't contain a numerical value
-    const int holds_operand = FALSE;
-
-    // if the symbol is a '.'
-    if (symbol_ascii == STOP_SYMBOL) {
-
-        // while the operators stack is not empty
-        while (stack->head != NULL) {
-
-            // push the rest of the operators to the stack
-            convert_to_rpn(&stack, &rpn, stack->head->value, stack->head->priority, stack->head->holds_operand, stack->head->arity, &flag);
-
-            // remove the pushed operator from the stack
-            pop(stack);
-
-        }
-
-        // stop the input
-        return;
-
-    }
-
-    int priority = INFINITY;
-    int arity = INFINITY;
-
-    // if the symbol is a parenthesis
-    if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
-
-        // set the parenthesis priority
-        priority = 4;
-
-        // if the symbol is a '(', just push it to the operators stack
-        if (symbol_ascii == OPEN_PARENTHESES) push(stack, symbol_ascii, priority, holds_operand, arity);
-
-        // if the symbol is a ')'
-        if (symbol_ascii == CLOSE_PARENTHESES) {
-
-            // create an iterator that will go through the whole stack
-            Node* iterator = stack->head;
-
-            // while there are elements in the stack
-            do {
-
-                // get the top operator symbol from the stack
-                Node* popped = pop(stack);
-
-                // if the symbol is a '(', stop the loop
-                if (popped->value == OPEN_PARENTHESES) break;
-
-                    // if the symbol is something else
-                else {
-
-                    // save the symbol to the RPN stack
-                    put(rpn, popped->value, priority, holds_operand, popped->arity, flag);
-
-                }
-
-                iterator = iterator->next;
-                free(popped);
-
-            }
-            while(iterator != NULL);
-
-            free(iterator);
-
-        }
-
-    }
-
-    // if the symbol is a '+' or a '-', set the according priority and push to RPN stack
-    else if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
-        priority = 1;
-        arity = 2;
-        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
-    }
-
-    // if the symbol is a '*' or a '/', set the according priority and push to RPN stack
-    else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
-        priority = 2;
-        arity = 2;
-        convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
-    }
-
-    // if the symbol is a capital letter (i.e. a part of a function name)
-    else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH) {
-
-        if (symbol_ascii == NEGATE) {
-            priority = 3;
-            arity = 1;
-            convert_to_rpn(&stack, &rpn, symbol_ascii, priority, holds_operand, arity, &flag);
-            *negate_function_found = TRUE;
-        }
-
-        // TODO: implement function support
-
-    }
-
-}
-
-
-// check if there were any 'N' functions
-void negate_function_check(List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found, int* negate_functions_counter) {
-    if (*negate_function_found == TRUE) {
-        // add the missing open parenthesis
-        check_operator_type(OPEN_PARENTHESES, stack, rpn, flag, STOP_SYMBOL, negate_function_found);
-        // increment the number of 'N' functions
-        *negate_functions_counter += 1;
-    }
-}
-
-
-// check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
-void parentheses_autocomplete(List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found,
-                              int* negate_functions_counter, const int* symbol_value, int priority, int holds_operand, int arity) {
-
-    // check if there were any 'N' functions
-    negate_function_check(stack, rpn, STOP_SYMBOL, flag, negate_function_found, negate_functions_counter);
-
-    // save the operand to the RPN stack
-    put(rpn, *symbol_value, priority, holds_operand, arity, flag);
-
-    // here we need to close all the open parentheses - as many as there were 'N' functions
-    for (int i = 0; i < *negate_functions_counter; i++) {
-        check_operator_type(CLOSE_PARENTHESES, stack, rpn, flag, STOP_SYMBOL, negate_function_found);
-    }
-
-    // reset the variables
-    *negate_function_found = FALSE;
-    *negate_functions_counter = 0;
-
-}
-
-
-// check if the last parsed symbol was a digit
-void check_if_digit(int* parsing_operand, int* symbol_value, List* stack, List* rpn, const char STOP_SYMBOL, int* flag, int* negate_function_found, int* negate_functions_counter) {
-
-    // if the flag is set to true (if we are parsing a number currently)
-    if (*parsing_operand) {
-
-        // give the operand its properties
-        const int priority = 0;
-        const int holds_operand = TRUE;
-        const int arity = INFINITY;
-
-        // check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
-        parentheses_autocomplete(stack, rpn, STOP_SYMBOL, flag, negate_function_found, negate_functions_counter, symbol_value, priority, holds_operand, arity);
-
-        // reset the variables
-        *symbol_value = 0;
-        *parsing_operand = FALSE;
-
-    }
-}
+#include "quantity.h"
+#include "input.h"
+#include "calculate.h"
 
 
 // parse the formula
@@ -342,9 +16,6 @@ void get_formula(List* stack, List* rpn) {
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
-
-    // create a constant that will tell the program when to stop accepting input from a user
-    const char STOP_SYMBOL = '.';
 
     // create a flag that will be set to '1' if the last symbol parsed was a digit
     int parsing_operand = FALSE;
@@ -357,203 +28,18 @@ void get_formula(List* stack, List* rpn) {
         // get a symbol from a user
         int symbol_ascii = getchar();
 
+        // if the symbol is a white character, ignore it
         if (symbol_ascii == SPACE) continue;
 
-        // if the symbol is an ascii of a digit
-        if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
-
-            // get its value and add to the 'symbol_value' variable as part of a formula of
-            // conversion ascii to its according value
-            symbol_value = symbol_value * FACTOR + (symbol_ascii - ASCII_DIGIT_RANGE_START);
-
-            // set the flag to true
-            parsing_operand = TRUE;
-
-        }
-
-        // if the symbol is an operator
-        else {
-
-            // check if the last parsed symbol was a digit
-            check_if_digit(&parsing_operand, &symbol_value, stack, rpn, STOP_SYMBOL, &flag, &negate_function_found, &negate_functions_counter);
-
-            // check if there are still 'N' functions left for us to handle parentheses
-            negate_function_check(stack, rpn, STOP_SYMBOL, &flag, &negate_function_found, &negate_functions_counter);
-
-            // if the symbol is not an ascii of a digit
-            check_operator_type(symbol_ascii, stack, rpn, &flag, STOP_SYMBOL, &negate_function_found);
-
-        }
+        // if the symbol is an ascii of a digit or an operator symbol
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter);
 
         // stop the input here
-        if (symbol_ascii == STOP_SYMBOL) {
-            break;
-        }
+        if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
 
     }
-
-    // print the RPN equation when completed
-    print(rpn);
 
 };
-
-
-// add the result of an operation to RPN stack
-void execute_operation(List* rpn, int result) {
-    const int priority = 0;
-    const int holds_operand = TRUE;
-    const int arity = INFINITY;
-    push(rpn, result, priority, holds_operand, arity);
-}
-
-
-// create a mirrored version of the RPN stack
-List mirror_stack(List* stack) {
-
-    // create an iterator that will go through the whole stack
-    Node* iterator = stack->head;
-
-    // create and initiate a mirrored stack
-    List mirrored_stack = {NULL, NULL};
-
-    // while there are elements in the original stack
-    do {
-
-        if (iterator != NULL) {
-
-            // push a symbol to the new mirrored stack
-            push(&mirrored_stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity);
-            iterator = iterator->next;
-        }
-
-    }
-    while (iterator != NULL);
-
-    free(iterator);
-
-    return mirrored_stack;
-
-}
-
-
-// check how many operands left on the stack
-void update_number_of_operands(List* stack, int* number_of_operands) {
-
-    // if the stack is empty
-    if (stack->head == NULL) {
-
-        // set the variable to zero
-        *number_of_operands = 0;
-        return;
-    }
-
-    // if the stack is not empty
-
-    // create a counter variable
-    int counter = 0;
-
-    // create an iterator that will go through the whole stack
-    Node* iterator = stack->head;
-
-    // while there are elements in a stack, increment the counter variable
-    do {
-        counter++;
-        iterator = iterator->next;
-    }
-    while (iterator != NULL);
-
-    // update the 'number_of_operands'
-    *number_of_operands = counter;
-
-    free(iterator);
-
-}
-
-
-// check if the mathematical equation requires a priority change (imaginary parentheses)
-List check_priority_change(List* stack, int arity, int number_of_operands) {
-
-    List necessary_operands = {NULL, NULL};
-
-    // if there was a priority change
-    if (number_of_operands > arity) {
-
-        // create and set the variable to 2 since
-        // we need to skip the first two operands that
-        // will participate in the operation
-        int counter = arity;
-
-        // create a node in which we will store
-        // temporarily popped values from the stack
-        Node* popped;
-
-        // create a temporary stack which will
-        // store temporary popped values from the stack
-        // to insert them later to the original stack back
-        List temporary_stack = {NULL, NULL};
-
-        // here we skip two values that will be used in the operation
-        // but others will be needed to be popped and then pushed back in
-        do {
-
-            // get the top symbol from the operations stack
-            popped = pop(stack);
-
-            // push the symbol to a temporary stack
-            push(&temporary_stack, popped->value, popped->priority, popped->holds_operand, popped->arity);
-
-            // increment the variable
-            counter++;
-
-        } while (counter != number_of_operands);
-
-        // get the necessary operands
-        for (int i = 0; i < arity; i++) {
-            Node* necessary_operand = pop(stack);
-            int flag = FALSE;
-            if (necessary_operand != NULL) {
-                put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
-                    necessary_operand->holds_operand, necessary_operand->arity, &flag);
-            }
-            free(necessary_operand);
-        }
-
-        // create an iterator that will go through the whole temporary stack
-        Node* iterator = temporary_stack.head;
-
-        // while there are elements in the temporary stack
-        do {
-
-            // push a symbol back to the original stack
-            push(stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity);
-
-            iterator = iterator->next;
-
-        } while (iterator != NULL);
-
-        free(popped);
-        free(iterator);
-
-    }
-    // if there was no priority change
-    else {
-
-        // get the necessary operands
-        for (int i = 0; i < arity; i++) {
-            Node* necessary_operand = pop(stack);
-            int flag = FALSE;
-            if (necessary_operand != NULL) {
-                put(&necessary_operands, necessary_operand->value, necessary_operand->priority,
-                    necessary_operand->holds_operand, necessary_operand->arity, &flag);
-            }
-            free(necessary_operand);
-        }
-
-    }
-
-    return necessary_operands;
-
-}
 
 
 // proceed to the calculations
@@ -568,30 +54,26 @@ void calculate_rpn(List* rpn) {
     // create a variable to store the number of parsed operands per single operator
     int number_of_operands = 0;
 
-    // define arity of operators
-    const int unary = 1;
-    const int binary = 2;
-
     do {
 
         // get the first symbol from RPN equation
         iterator = pop(rpn);
 
         // if the parsed symbol is an operand
-        if (iterator->holds_operand) {
+        if (iterator->is_operand) {
 
             // TODO: change this
             int flag = FALSE;
 
             // save the operand on stack
-            put(&stack, iterator->value, iterator->priority, iterator->holds_operand, iterator->arity, &flag);
+            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->arity, &flag);
 
             // keep track of how many operands we have already put on stack
             ++number_of_operands;
 
         }
 
-            // if the parsed symbol is an operator
+        // if the parsed symbol is an operator
         else {
 
             // print the operator
@@ -605,88 +87,11 @@ void calculate_rpn(List* rpn) {
             // print the reversed stack that contains steps
             print(&operation_steps);
 
-            // create a variable to store the result of an operation and initiate it to infinity
-            int result = INFINITY;
+            int division_by_zero = FALSE;
 
-            List necessary_operands;
+            check_for_operator_arity(&stack, rpn, iterator, &number_of_operands, &division_by_zero);
 
-            // we are using binary operators, which means we need only two operands
-            if (iterator->arity == unary) {
-
-                necessary_operands = check_priority_change(&stack, unary, number_of_operands);
-
-                // since we popped two necessary operands, we have to update the number of them on the stack
-                update_number_of_operands(&stack, &number_of_operands);
-
-                if (necessary_operands.head != NULL) {
-
-                    // if the operator is a function 'N'
-                    if (iterator->value == NEGATE) {
-
-                        Node* popped = pop(&necessary_operands);
-                        result = ZERO - popped->value;
-                        int flag = FALSE;
-
-                        free(popped);
-
-                    }
-
-                    if (result != INFINITY) {
-                        execute_operation(rpn, result);
-                    }
-
-                }
-
-            }
-            else if (iterator->arity == binary) {
-
-                // check how many operands we have on our stack
-                // i.e. if the parsed mathematical equation requires change of
-                // priority, or, as to say, imaginary parentheses.
-                // if there are more than two operands, it means that the priority change
-                // was encountered, and we need to change the order of getting
-                // operands from the stack
-                necessary_operands = check_priority_change(&stack, binary, number_of_operands);
-
-                // since we popped two necessary operands, we have to update the number of them on the stack
-                update_number_of_operands(&stack, &number_of_operands);
-
-                // if both operands exist
-                if (necessary_operands.head != NULL && necessary_operands.tail != NULL) {
-
-                    Node* first_operand = pop(&necessary_operands);
-                    Node* second_operand = pop(&necessary_operands);
-
-                    // if the operator is an '*'
-                    if (iterator->value == ASTERISK) result = first_operand->value * second_operand->value;
-                        // if the operator is a '/'
-                    else if (iterator->value == SLASH) {
-
-                        // if the divisor is 0
-                        if (second_operand->value == ZERO) {
-                            printf("ERROR\n");
-                            return;
-                        } else {
-                            result = first_operand->value / second_operand->value;
-                        }
-
-                    }
-                        // if the operator is a '+'
-                    else if (iterator->value == PLUS) result = first_operand->value + second_operand->value;
-                        // if the operator is a '-'
-                    else if (iterator->value == MINUS) result = first_operand->value - second_operand->value;
-
-                    // if calculations are successful, push the result to the RPN stack
-                    if (result != INFINITY) {
-                        execute_operation(rpn, result);
-                    }
-
-                    free(first_operand);
-                    free(second_operand);
-
-                }
-
-            }
+            if (division_by_zero == TRUE) return;
 
         }
 
@@ -721,6 +126,9 @@ int main() {
 
         // parse the input equation and turn it into an RPN one
         get_formula(&stack, &rpn);
+
+        // print the RPN equation when completed
+        print(&rpn);
 
         // clear the operators stack to avoid data mix-up
         stack.head = NULL;

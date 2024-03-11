@@ -12,7 +12,7 @@ typedef struct Node {
 
     int value;
     int priority;
-    int holds_operand;
+    int is_operand;
     int arity;
     struct Node* next;
     struct Node* previous;
