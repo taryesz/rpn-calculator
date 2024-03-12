@@ -11,8 +11,12 @@
 // parse the formula
 void get_formula(List* stack, List* rpn) {
 
+    int parsing_function_name = 0;
     int negate_function_found = FALSE;
     int negate_functions_counter = 0;
+    int functions_counter = 0;
+    int iterator = 0;
+    int finish = TRUE;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -32,7 +36,7 @@ void get_formula(List* stack, List* rpn) {
         if (symbol_ascii == SPACE) continue;
 
         // if the symbol is an ascii of a digit or an operator symbol
-        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter);
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &parsing_function_name, &functions_counter, &iterator);
 
         // stop the input here
         if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
