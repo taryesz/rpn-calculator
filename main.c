@@ -16,7 +16,6 @@ void get_formula(List* stack, List* rpn) {
     int negate_functions_counter = 0;
     int functions_counter = 0;
     int iterator = 0;
-    int finish = TRUE;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -58,6 +57,8 @@ void calculate_rpn(List* rpn) {
     // create a variable to store the number of parsed operands per single operator
     int number_of_operands = 0;
 
+    int parsing_function_flag = FALSE;
+
     do {
 
         // get the first symbol from RPN equation
@@ -70,7 +71,7 @@ void calculate_rpn(List* rpn) {
             int flag = FALSE;
 
             // save the operand on stack
-            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->arity, &flag);
+            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, &flag);
 
             // keep track of how many operands we have already put on stack
             ++number_of_operands;
@@ -80,8 +81,22 @@ void calculate_rpn(List* rpn) {
         // if the parsed symbol is an operator
         else {
 
-            // print the operator
-            printf("%c ", iterator->value);
+            if (parsing_function_flag) {
+                printf("%c", iterator->value);
+            }
+            else {
+                // print the operator
+                if (!iterator->is_function) printf("%c ", iterator->value);
+            }
+
+            if (iterator->is_function && parsing_function_flag == FALSE) {
+                parsing_function_flag = TRUE;
+                printf("%c", iterator->value);
+                continue;
+            }
+            else {
+                printf(" ");
+            }
 
             // since our operands are being put on the stack, and not pushed,
             // and we need to print steps in reverse, we have to create a separate

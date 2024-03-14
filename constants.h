@@ -64,6 +64,8 @@
 
 #define PARENTHESIS_PRIORITY 4
 
+#define DEFAULT_ID (-1)
+
 // all possible functions used
 enum function_names {
     N,

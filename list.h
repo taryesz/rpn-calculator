@@ -36,6 +36,7 @@ Node* pop(List* stack) {
         // if there is only one node:
         else {
             Node* popped = stack->head;
+
             stack->head = NULL;
             stack->tail = NULL;
             return popped;
@@ -46,7 +47,7 @@ Node* pop(List* stack) {
 }
 
 
-void push(List* stack, int value, int priority, int holds_operand, int arity) {
+void push(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id) {
 
     // O(1) version
 
@@ -55,9 +56,16 @@ void push(List* stack, int value, int priority, int holds_operand, int arity) {
     node->value = value;
     node->priority = priority;
     node->arity = arity;
+    node->id = id;
 
+    if (is_function) {
+        node->is_function = 1;
+    }
+    else {
+        node->is_function = 0;
+    }
 
-    if (holds_operand) {
+    if (is_operand) {
         node->is_operand = 1;
     }
     else {
@@ -108,7 +116,7 @@ void push(List* stack, int value, int priority, int holds_operand, int arity) {
 }
 
 
-void put(List* stack, int value, int priority, int holds_operand, int arity, int* flag) {
+void put(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id, int* flag) {
 
     // O(1) version
 
@@ -117,8 +125,16 @@ void put(List* stack, int value, int priority, int holds_operand, int arity, int
     node->value = value;
     node->priority = priority;
     node->arity = arity;
+    node->id = id;
 
-    if (holds_operand) {
+    if (is_function) {
+        node->is_function = 1;
+    }
+    else {
+        node->is_function = 0;
+    }
+
+    if (is_operand) {
         node->is_operand = 1;
     }
     else {
@@ -164,18 +180,18 @@ void put(List* stack, int value, int priority, int holds_operand, int arity, int
                 *flag = 1;
             }
 
-//            free(saved_tail);
-
         }
 
     }
-
-//    free(node);
 
 }
 
 
 void print(List* stack) {
+
+    int printing_function = 0;
+    int previous_id = 0;
+    Node* previous_symbol;
 
     Node* iterator = stack->head;
 
@@ -184,11 +200,26 @@ void print(List* stack) {
     do {
 
         if (iterator->is_operand) {
+            if (printing_function) printf(" ");
+            printing_function = 0;
             printf("%d ", iterator->value);
         }
         else {
-            printf("%c ", iterator->value);
+            if (iterator->is_function) {
+                if (iterator->id != previous_id && previous_symbol->is_function) printf(" ");
+                printf("%c", iterator->value);
+                printing_function = 1;
+            } else {
+                if (printing_function) printf(" %c ", iterator->value);
+                else {
+                    printf("%c ", iterator->value);
+                }
+                printing_function = 0;
+            }
         }
+
+        previous_id = iterator->id;
+        previous_symbol = iterator;
 
         iterator = iterator->next;
 
@@ -199,3 +230,4 @@ void print(List* stack) {
     free(iterator);
 
 }
+
