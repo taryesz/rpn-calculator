@@ -218,6 +218,7 @@ void print(List* stack) {
             }
         }
 
+//        printf("(is func: %d)", iterator->is_function);
         previous_id = iterator->id;
         previous_symbol = iterator;
 
