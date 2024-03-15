@@ -105,8 +105,9 @@ void push(List* stack, int value, int priority, int is_operand, int is_function,
             stack->head = node;
             stack->head->next = saved_head;
             stack->head->previous = NULL;
+            saved_head->previous = stack->head;
 
-            stack->tail->previous = saved_head;
+//            stack->tail->previous = saved_head;
 
 //            free(saved_head);
 
@@ -177,10 +178,10 @@ void put(List* stack, int value, int priority, int is_operand, int is_function, 
             stack->tail->previous = saved_tail;
             stack->tail->next = NULL;
 
-            if (flag == 0) {
-                stack->head->next = saved_tail;
-                *flag = 1;
-            }
+//            if (flag == 0) {
+//                stack->head->next = saved_tail;
+//                *flag = 1;
+//            }
 
         }
 
