@@ -16,6 +16,7 @@ void get_formula(List* stack, List* rpn) {
     int functions_counter = 0;
     int iterator = 0;
     int last_function = 0;
+    int last_symbol = INFINITY;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -35,7 +36,7 @@ void get_formula(List* stack, List* rpn) {
         if (symbol_ascii == SPACE) continue;
 
         // if the symbol is an ascii of a digit or an operator symbol
-        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function);
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol);
 
         // stop the input here
         if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
@@ -71,7 +72,7 @@ void calculate_rpn(List* rpn) {
             int flag = FALSE;
 
             // save the operand on stack
-            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, &flag);
+            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol, &flag);
 
             // keep track of how many operands we have already put on stack
             ++number_of_operands;

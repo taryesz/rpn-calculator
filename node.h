@@ -14,6 +14,7 @@ typedef struct Node {
     int priority;
     int is_operand;
     int is_function;
+    int is_function_end_symbol;
     int id;
     int arity;
     struct Node* next;

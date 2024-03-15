@@ -47,7 +47,7 @@ Node* pop(List* stack) {
 }
 
 
-void push(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id) {
+void push(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id, int is_function_end_symbol) {
 
     // O(1) version
 
@@ -57,6 +57,7 @@ void push(List* stack, int value, int priority, int is_operand, int is_function,
     node->priority = priority;
     node->arity = arity;
     node->id = id;
+    node->is_function_end_symbol = is_function_end_symbol;
 
     if (is_function) {
         node->is_function = 1;
@@ -116,7 +117,7 @@ void push(List* stack, int value, int priority, int is_operand, int is_function,
 }
 
 
-void put(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id, int* flag) {
+void put(List* stack, int value, int priority, int is_operand, int is_function, int arity, int id, int is_function_end_symbol, int* flag) {
 
     // O(1) version
 
@@ -126,6 +127,7 @@ void put(List* stack, int value, int priority, int is_operand, int is_function, 
     node->priority = priority;
     node->arity = arity;
     node->id = id;
+    node->is_function_end_symbol = is_function_end_symbol;
 
     if (is_function) {
         node->is_function = 1;
@@ -218,7 +220,7 @@ void print(List* stack) {
             }
         }
 
-//        printf("(is func: %d)", iterator->is_function);
+//        printf("(id: %d)", iterator->id);
         previous_id = iterator->id;
         previous_symbol = iterator;
 

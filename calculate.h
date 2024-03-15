@@ -9,15 +9,17 @@
 
 
 // add the result of an operation to RPN stack
-void execute_operation(List* rpn, int* priority, int* is_operand, int* is_function, int* arity, int result) {
+void execute_operation(List* rpn, int* priority, int* is_operand, int* is_function, int* arity, int* is_function_end_symbol, int result) {
     set_priority(priority, OPERAND_PRIORITY);
     set_is_operand(is_operand, TRUE);
     set_is_function(is_function, FALSE);
     set_arity(arity, OPERAND_ARITY);
+    // TODO:
     int id;
     if (rpn->head == NULL) id = 0;
     else { id = rpn->head->id + 1; }
-    push(rpn, result, *priority, *is_operand, *is_function, *arity, id);
+    set_is_function_end_symbol(is_function_end_symbol, FALSE);
+    push(rpn, result, *priority, *is_operand, *is_function, *arity, id, *is_function_end_symbol);
 }
 
 
@@ -36,7 +38,7 @@ List mirror_stack(List* stack) {
         if (iterator != NULL) {
 
             // push a symbol to the new mirrored stack
-            push(&mirrored_stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id);
+            push(&mirrored_stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol);
             iterator = iterator->next;
         }
 
@@ -90,7 +92,7 @@ void fill_necessary_operands_list(List* stack, List* necessary_operands, int ari
         int flag = FALSE;
         if (necessary_operand != NULL) {
             put(necessary_operands, necessary_operand->value, necessary_operand->priority,
-                necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, &flag);
+                necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, necessary_operand->is_function_end_symbol, &flag);
         }
         free(necessary_operand);
     }
@@ -127,7 +129,7 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
             popped = pop(stack);
 
             // push the symbol to a temporary stack
-            push(&temporary_stack, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id);
+            push(&temporary_stack, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol);
 
             // increment the variable
             counter++;
@@ -144,7 +146,7 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
         do {
 
             // push a symbol back to the original stack
-            push(stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id);
+            push(stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol);
 
             iterator = iterator->next;
 
@@ -211,7 +213,8 @@ void perform_binary_calculations(List* necessary_operands, List* stack, List* rp
             int is_operand;
             int is_function;
             int arity;
-            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, *result);
+            int is_function_end_symbol;
+            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
         }
 
         free(first_operand);
@@ -245,7 +248,8 @@ void perform_unary_calculations(List* necessary_operands, List* stack, List* rpn
             int is_operand;
             int is_function;
             int arity;
-            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, *result);
+            int is_function_end_symbol;
+            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
         }
 
     }
@@ -258,9 +262,6 @@ void perform_ternary_calculations(List* necessary_operands, List* stack, List* r
     *necessary_operands = check_priority_change(stack, TERNARY_ARITY, *number_of_operands);
 
     update_number_of_operands(stack, number_of_operands);
-
-    // check if IF() ?
-    int exists = TRUE;
 
     if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
 
@@ -280,7 +281,8 @@ void perform_ternary_calculations(List* necessary_operands, List* stack, List* r
             int is_operand;
             int is_function;
             int arity;
-            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, *result);
+            int is_function_end_symbol;
+            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
         }
 
         free(popped);
