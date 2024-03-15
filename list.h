@@ -220,7 +220,7 @@ void print(List* stack) {
             }
         }
 
-//        printf("(id: %d)", iterator->id);
+//        printf("(%d)", iterator->id);
         previous_id = iterator->id;
         previous_symbol = iterator;
 

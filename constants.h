@@ -47,6 +47,7 @@
 #define SPACE ' '
 #define EQUATION_STOP_SYMBOL '.'
 #define QUANTITY_STOP_SYMBOL '\n'
+#define COMMA ','
 
 // symbol properties
 #define OPERAND_PRIORITY 0

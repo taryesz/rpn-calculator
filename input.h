@@ -263,7 +263,7 @@ void compare_function_names(int symbol_ascii, List *stack, List *rpn, int *flag,
 
 
 // if the symbol is a parenthesis ('(' or ')')
-void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority, int is_operand, int is_function, int arity, int is_function_end_symbol, int* flag, int* last_symbol) {
+void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority, int is_operand, int is_function, int arity, int is_function_end_symbol, int* flag, int* last_symbol, int* function_open_parenthesis_id) {
 
     int id = DEFAULT_ID;
 
@@ -273,52 +273,75 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
     // if the symbol is a '(', just push it to the operators stack
     if (symbol_ascii == OPEN_PARENTHESES) {
         set_id(rpn, &id, is_function);
+        printf("found an open parenthesis (%d)\n", id);
+        if (stack->head != NULL) {
+            if (stack->head->is_function) {
+                *function_open_parenthesis_id = id;
+                printf("saved function's open parenthesis (%d)\n", *function_open_parenthesis_id);
+
+            }
+        }
+
 
         // TODO: add a checker to firstly put the function and then push the brace
 
-        /*
-             *  if (*close_parenthesis_flag == TRUE) {
-             *      convert_to_rpn();
-             *      push(brace)
-             *  else {
-             *      push(brace)
-             *  }
-        */
-
-//        if(*close_parenthesis_flag == TRUE) {
-//            int function_parsing_flag = TRUE;
-//            convert_to_rpn(stack, rpn, stack->head->value, *priority, is_operand, is_function, arity, id, flag, &function_parsing_flag);
-//            *close_parenthesis_flag = FALSE;
-//        }
-//        push(stack, symbol_ascii, *priority, is_operand, is_function, arity, id);
-
         // TODO: this works, but the printing is broken (id's are the same when two functions in a row)
-        if (*last_symbol == ',') {
-
-            if (stack->head != NULL) {
-                if (stack->head->is_function) {
-                    Node *iterator = stack->head;
-                    do {
-                        if (iterator->is_function) {
-                            iterator = iterator->next;
-                            Node *tmp = pop(stack);
-                            int popped_id = DEFAULT_ID;
-                            set_id(rpn, &popped_id, tmp->is_function);
-                            put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity,
-                                popped_id, tmp->is_function_end_symbol, flag);
-                        } else {
-                            break;
-                        }
-
-                    } while (iterator->is_function);
-                }
-            }
-        }
+//        if (*last_symbol == ',') {
+//
+//            if (stack->head != NULL) {
+//                if (stack->head->is_function) {
+//                    Node *iterator = stack->head;
+//                    do {
+//                        if (iterator->is_function) {
+//                            iterator = iterator->next;
+//                            Node *tmp = pop(stack);
+//                            int popped_id = DEFAULT_ID;
+//                            set_id(rpn, &popped_id, tmp->is_function);
+//                            put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity,
+//                                popped_id, tmp->is_function_end_symbol, flag);
+//                        } else {
+//                            break;
+//                        }
+//
+//                    } while (iterator->is_function);
+//                }
+//                else {
+////                    if (*last_symbol == ',') {
+//                        Node* tmp = pop(stack);
+//                        int popped_id = DEFAULT_ID;
+//                        set_id(rpn, &popped_id, tmp->is_function);
+////                        printf("put %c\n", tmp->value);
+//                        put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity,popped_id, tmp->is_function_end_symbol, flag);
+//                        free(tmp);
+//
+//                        // TODO: ADD A COMA CHECKER:
+//                        // if a function is found -> go inside its body (after open brace):
+//                        //      save_brace_id()
+//                        //      (iterate through the argument until a COMA is found)
+//                        //      if coma_found OR close_brace_found:
+//                        //          put all of the parsed stuff starting from the open brace
+//                        //          (could use id to distinguish which brace to stop at)
+//                        //          coma_found = false;
+//                        //          close_brace_found = false;
+//                        //
+//
+//                        // TODO: need to remove (check) OPEN_PARENTHESIS functionality added recently
+//
+//
+////                    }
+////                    put(rpn, *symbol_value, priority, is_operand, is_function, arity, id, is_function_end_symbol, flag);
+//
+//                }
+//            }
+//        }
         push(stack, symbol_ascii, *priority, is_operand, is_function, arity, id, is_function_end_symbol);
+//    }
     }
 
     // if the symbol is a ')'
     if (symbol_ascii == CLOSE_PARENTHESES) {
+
+        printf("found a close parenthesis\n");
 
         // create an iterator that will go through the whole stack
         Node* iterator = stack->head;
@@ -331,14 +354,21 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
 
             // if the symbol is a '(', stop the loop
             if (popped->value == OPEN_PARENTHESES) {
+                print(stack);
+                print(rpn);
+                printf("found an open parenthesis after a close parenthesis. stopping the loop\n");
                 break;
             }
             // if the symbol is something else
             else {
 
+                printf("saving the non-open-parenthesis symbol (%c) after close parenthesis found\n", popped->value);
                 // save the symbol to the RPN stack
                 set_id(rpn, &id, popped->is_function);
                 put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, id, popped->is_function_end_symbol, flag);
+
+                print(stack);
+                print(rpn);
 
             }
 
@@ -397,7 +427,7 @@ void check_for_stop(int symbol_ascii, List* stack, List* rpn, int* flag) {
 
 
 // check what operator was passed
-void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int *negate_function_found, int *functions_counter, int *iterator, int* last_function, int* last_symbol) {
+void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int *negate_function_found, int *functions_counter, int *iterator, int* last_function, int* last_symbol, int* function_open_parenthesis_id) {
 
     // create a const to indicate that the symbol doesn't contain a numerical value
     int is_operand;
@@ -417,7 +447,7 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
     // if the symbol is a parenthesis
     if (symbol_ascii == OPEN_PARENTHESES || symbol_ascii == CLOSE_PARENTHESES) {
         set_arity(&arity, PARENTHESIS_ARITY);
-        process_parenthesis(symbol_ascii, stack, rpn, &priority, is_operand, is_function, arity, is_function_end_symbol, flag, last_symbol);
+        process_parenthesis(symbol_ascii, stack, rpn, &priority, is_operand, is_function, arity, is_function_end_symbol, flag, last_symbol, function_open_parenthesis_id);
     }
 
     // if the symbol is a '+' or a '-', set the according priority and push to RPN stack
@@ -435,13 +465,45 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
         compare_function_names(symbol_ascii, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function);
     }
 
+    else if (symbol_ascii == COMMA) {
+
+        // TODO: ADD A COMA CHECKER:
+//                        // if a function is found -> go inside its body (after open brace):
+//                        //      save_brace_id()
+//                        //      (iterate through the argument until a COMA is found)
+//                        //      if coma_found OR close_brace_found:
+//                        //          put all of the parsed stuff starting from the open brace
+//                        //          (could use id to distinguish which brace to stop at)
+//                        //          coma_found = false;
+//                        //          close_brace_found = false;
+//                        //
+
+        printf("found comma, parsing the first argument of a function\n");
+        Node* stack_iterator = stack->head;
+
+        do {
+            printf("iterator: %d\n", stack_iterator->id);
+            stack_iterator = stack_iterator->next;
+            Node *tmp = pop(stack);
+            int popped_id = DEFAULT_ID;
+            set_id(rpn, &popped_id, tmp->is_function);
+            if (stack_iterator->value == OPEN_PARENTHESES && stack_iterator->id == *function_open_parenthesis_id) {
+            put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity, popped_id, tmp->is_function_end_symbol, flag);
+            printf("put a symbol: %c\n", tmp->value);
+            }
+            free(tmp);
+        }
+        while (stack_iterator->value != OPEN_PARENTHESES && stack_iterator->id != *function_open_parenthesis_id);
+
+    }
+
     *last_symbol = symbol_ascii;
 
 }
 
 
 // check if there were any 'N' functions
-void check_for_negate_function(List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter,int *functions_counter, int *iterator, int* last_function, const int* current_symbol, int* last_symbol) {
+void check_for_negate_function(List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter,int *functions_counter, int *iterator, int* last_function, const int* current_symbol, int* last_symbol, int* function_open_parenthesis_id) {
 
     // if the function is found
     if (*negate_function_found == TRUE) {
@@ -450,7 +512,7 @@ void check_for_negate_function(List *stack, List *rpn, int *flag, int *negate_fu
             // add the missing open parenthesis
 
             check_for_operator(OPEN_PARENTHESES, stack, rpn, flag, negate_function_found, functions_counter,
-                               iterator, last_function, last_symbol);
+                               iterator, last_function, last_symbol, function_open_parenthesis_id);
             // increment the number of 'N' functions
             *negate_functions_counter += 1;
         }
@@ -463,23 +525,58 @@ void check_for_negate_function(List *stack, List *rpn, int *flag, int *negate_fu
 
 
 // check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
-void add_missing_parentheses(List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *symbol_value, int priority, int is_operand, int is_function, int arity, int is_function_end_symbol, int *functions_counter, int *iterator, int* last_function, int* last_symbol) {
+void add_missing_parentheses(List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *symbol_value, int priority, int is_operand, int is_function, int arity, int is_function_end_symbol, int *functions_counter, int *iterator, int* last_function, int* last_symbol, int* function_open_parenthesis_id) {
 
     // check if there were any 'N' functions
-    check_for_negate_function(stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, symbol_value, last_symbol);
+    check_for_negate_function(stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, symbol_value, last_symbol, function_open_parenthesis_id);
 
     // save the operand to the RPN stack
     int id = DEFAULT_ID;
     set_id(rpn, &id, is_function);
 
+    /*
+     * if (*last_symbol == ',') {
+
+            if (stack->head != NULL) {
+                if (stack->head->is_function) {
+                    Node *iterator = stack->head;
+                    do {
+                        if (iterator->is_function) {
+                            iterator = iterator->next;
+                            Node *tmp = pop(stack);
+                            int popped_id = DEFAULT_ID;
+                            set_id(rpn, &popped_id, tmp->is_function);
+                            put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity,
+                                popped_id, tmp->is_function_end_symbol, flag);
+                        } else {
+                            break;
+                        }
+
+                    } while (iterator->is_function);
+                }
+            }
+        }
+        push(stack, symbol_ascii, *priority, is_operand, is_function, arity, id, is_function_end_symbol);
+     */
+
+//    printf("last symbol: %c\n", *last_symbol);
+//    if (*last_symbol == ',') {
+//        Node* tmp = pop(stack);
+//        int popped_id = DEFAULT_ID;
+//        set_id(rpn, &popped_id, tmp->is_function);
+//        printf("put %c\n", tmp->value);
+//        put(rpn, tmp->value, tmp->priority, tmp->is_operand, tmp->is_function, tmp->arity,popped_id, tmp->is_function_end_symbol, flag);
+//        free(tmp);
+//    }
+
     put(rpn, *symbol_value, priority, is_operand, is_function, arity, id, is_function_end_symbol, flag);
 
-    // TODO: THIS LOOP HAS TO ONLY BE EXECUTED IF THE LAST FUNCTION WAS 'N', BUT IF THE LAST FUNCTION WAS SOMETHING
-    // TODO: ELSE, FIRST WE NEED TO EXECUTE THAT OTHER FUNCTION, AND ONLY THEN CLOSE THE BRACES FOR 'N'
+    print(stack);
+    print(rpn);
 
     // here we need to close all the open parentheses - as many as there were 'N' functions
     for (int i = 0; i < *negate_functions_counter; i++) {
-        check_for_operator(CLOSE_PARENTHESES, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function, last_symbol);
+        check_for_operator(CLOSE_PARENTHESES, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function, last_symbol, function_open_parenthesis_id);
     }
 
     // reset the variables
@@ -490,7 +587,7 @@ void add_missing_parentheses(List *stack, List *rpn, int *flag, int *negate_func
 
 
 // check if the last parsed symbol was a digit
-void check_for_operand(int *parsing_operand, int *symbol_value, List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *functions_counter, int *iterator, int* last_function, int* close_parenthesis_flag) {
+void check_for_operand(int *parsing_operand, int *symbol_value, List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *functions_counter, int *iterator, int* last_function, int* close_parenthesis_flag, int* function_open_parenthesis_id) {
 
     // if the flag is set to true (if we are parsing a number currently)
     if (*parsing_operand) {
@@ -510,7 +607,7 @@ void check_for_operand(int *parsing_operand, int *symbol_value, List *stack, Lis
         set_is_function_end_symbol(&is_function_end_symbol, FALSE);
 
         // check if the mathematical equation uses 'N' function and if so, put the missing parentheses where necessary
-        add_missing_parentheses(stack, rpn, flag, negate_function_found, negate_functions_counter, symbol_value, priority, is_operand, is_function, arity, is_function_end_symbol, functions_counter, iterator, last_function, close_parenthesis_flag);
+        add_missing_parentheses(stack, rpn, flag, negate_function_found, negate_functions_counter, symbol_value, priority, is_operand, is_function, arity, is_function_end_symbol, functions_counter, iterator, last_function, close_parenthesis_flag, function_open_parenthesis_id);
 
         // reset the variables
         *symbol_value = 0;
@@ -521,7 +618,7 @@ void check_for_operand(int *parsing_operand, int *symbol_value, List *stack, Lis
 
 
 // if the symbol is an ascii of a digit ...
-void check_symbol_type(int symbol_ascii, int *symbol_value, int *parsing_operand, List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *functions_counter, int *iterator, int* last_function, int* last_symbol) {
+void check_symbol_type(int symbol_ascii, int *symbol_value, int *parsing_operand, List *stack, List *rpn, int *flag, int *negate_function_found, int *negate_functions_counter, int *functions_counter, int *iterator, int* last_function, int* last_symbol, int* function_open_parenthesis_id) {
 
     // if the symbol is in a numeric ascii range
     if (symbol_ascii >= ASCII_DIGIT_RANGE_START && symbol_ascii <= ASCII_DIGIT_RANGE_FINISH) {
@@ -538,13 +635,13 @@ void check_symbol_type(int symbol_ascii, int *symbol_value, int *parsing_operand
     else {
 
         // check if the previously parsed symbol was an operand
-        check_for_operand(parsing_operand, symbol_value, stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, last_symbol);
+        check_for_operand(parsing_operand, symbol_value, stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, last_symbol, function_open_parenthesis_id);
 
         // check if there are still 'N' functions left for us to handle parentheses
-        check_for_negate_function(stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, &symbol_ascii, last_symbol);
+        check_for_negate_function(stack, rpn, flag, negate_function_found, negate_functions_counter, functions_counter, iterator, last_function, &symbol_ascii, last_symbol, function_open_parenthesis_id);
 
         // if the symbol is not an ascii of a digit
-        check_for_operator(symbol_ascii, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function, last_symbol);
+        check_for_operator(symbol_ascii, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function, last_symbol, function_open_parenthesis_id);
 
     }
 
