@@ -576,8 +576,13 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
             // but it's not wrapped in parentheses
             else {
                 if (stack->head->value != OPEN_PARENTHESES) {
-                    Node* popped = pop(stack);
-                    put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, flag);
+                    Node *argument = stack->head;
+                    do {
+                        Node *popped = pop(stack);
+                        put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, flag);
+                        argument = argument->next;
+                    }
+                    while (argument->value != OPEN_PARENTHESES);
                 }
             }
         }
