@@ -354,6 +354,9 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
             // if the symbol is a '(', stop the loop
             if (popped->value == OPEN_PARENTHESES) {
 
+//                print(stack);
+//                print(rpn);
+
                 // if we finished parsing the inside of a function, we need to close all the open parentheses
                 process_arguments(stack, rpn, priority, &is_operand, &is_function, &arity, &is_function_end_symbol, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete);
 
@@ -555,9 +558,22 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
     }
 
     // if the symbol is a comma (which means that in the context of this program, we are iterating through a function)
-//    else if (symbol_ascii == COMMA) {
-//        process_arguments(stack, rpn, negate_functions_counter, negate_function_found, functions_counter, iterator, last_function, last_symbol, function_open_parenthesis_id, flag, parsing_arguments_of_a_function);
-//    }
+    else if (symbol_ascii == COMMA) {
+
+        // put braces back
+        process_missing_parentheses(stack, rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete);
+
+        if (stack->head != NULL) {
+            if (stack->head->is_function) {
+                Node* argument = stack->head;
+                do {
+                    Node *popped = pop(stack);
+                    put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, flag);
+                    argument = argument->next;
+                } while (argument->value != OPEN_PARENTHESES);
+            }
+        }
+    }
 
     *last_symbol = symbol_ascii;
 
