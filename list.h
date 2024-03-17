@@ -105,7 +105,7 @@ void push(List* stack, int value, int priority, int is_operand, int is_function,
             stack->head = node;
             stack->head->next = saved_head;
             stack->head->previous = NULL;
-            saved_head->previous = stack->head;
+             saved_head->previous = stack->head;
 
 //            stack->tail->previous = saved_head;
 

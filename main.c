@@ -18,6 +18,8 @@ void get_formula(List* stack, List* rpn) {
     int last_function = 0;
     int last_symbol = INFINITY;
     int function_open_parenthesis_id = DEFAULT_ID;
+    int parsing_arguments_of_a_function = FALSE;
+    int close_parenthesis_autocomplete = FALSE;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -37,7 +39,7 @@ void get_formula(List* stack, List* rpn) {
         if (symbol_ascii == SPACE) continue;
 
         // if the symbol is an ascii of a digit or an operator symbol
-        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id);
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id, &parsing_arguments_of_a_function, &close_parenthesis_autocomplete);
 
         // stop the input here
         if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
