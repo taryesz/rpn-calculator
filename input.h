@@ -364,7 +364,7 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
 
             }
 
-            // if the symbol is something else
+                // if the symbol is something else
             else {
 
                 // save the symbol to the RPN stack
@@ -542,22 +542,22 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
         process_parenthesis(symbol_ascii, stack, rpn, &priority, is_operand, is_function, arity, is_function_end_symbol, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete);
     }
 
-    // if the symbol is a '+' or a '-', set the according priority and push to RPN stack
+        // if the symbol is a '+' or a '-', set the according priority and push to RPN stack
     else if (symbol_ascii == PLUS || symbol_ascii == MINUS) {
         process_operator(symbol_ascii, stack, rpn, &priority, is_operand, is_function, &arity, is_function_end_symbol, flag, OPERATOR_PLUS_MINUS_PRIORITY, parsing_arguments_of_a_function, last_symbol, negate_functions_counter, function_open_parenthesis_id, close_parenthesis_autocomplete);
     }
 
-    // if the symbol is a '*' or a '/', set the according priority and push to RPN stack
+        // if the symbol is a '*' or a '/', set the according priority and push to RPN stack
     else if (symbol_ascii == ASTERISK || symbol_ascii == SLASH) {
         process_operator(symbol_ascii, stack, rpn, &priority, is_operand, is_function, &arity, is_function_end_symbol, flag, OPERATOR_ASTERISK_SLASH_PRIORITY, parsing_arguments_of_a_function, last_symbol, negate_functions_counter, function_open_parenthesis_id, close_parenthesis_autocomplete);
     }
 
-    // if the symbol is a capital letter (i.e. a part of a function name)
+        // if the symbol is a capital letter (i.e. a part of a function name)
     else if (symbol_ascii >= ASCII_LETTER_RANGE_START && symbol_ascii <= ASCII_LETTER_RANGE_FINISH || symbol_ascii == SPACE) {
         compare_function_names(symbol_ascii, stack, rpn, flag, negate_function_found, functions_counter, iterator, last_function);
     }
 
-    // if the symbol is a comma (which means that in the context of this program, we are iterating through a function)
+        // if the symbol is a comma (which means that in the context of this program, we are iterating through a function)
     else if (symbol_ascii == COMMA) {
 
         // put braces back
@@ -571,6 +571,14 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, int *flag, int
                     put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, flag);
                     argument = argument->next;
                 } while (argument->value != OPEN_PARENTHESES);
+            }
+            // if nothing from the above did any change, it means that the argument here is a simple formula (like 2 * 5)
+            // but it's not wrapped in parentheses
+            else {
+                if (stack->head->value != OPEN_PARENTHESES) {
+                    Node* popped = pop(stack);
+                    put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, flag);
+                }
             }
         }
     }
@@ -669,7 +677,7 @@ void check_symbol_type(int symbol_ascii, int *symbol_value, int *parsing_operand
         *parsing_operand = TRUE;
 
     }
-    // if the symbol is an operator
+        // if the symbol is an operator
     else {
 
         // check if the previously parsed symbol was an operand
