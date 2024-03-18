@@ -208,8 +208,9 @@ void print(List* stack) {
             printf("%d ", iterator->value);
         }
         else {
-            if (iterator->is_function) {
-                if (iterator->id != previous_id && previous_symbol->is_function) printf(" ");
+            // TODO: 'M' & 'I' have the same id's, while the 'N' has a different one
+            if (iterator->is_function || iterator->value == 'N') {
+                if (iterator->id != previous_id && (previous_symbol->is_function || previous_symbol->value == 'N')) printf(" ");
                 printf("%c", iterator->value);
                 printing_function = 1;
             } else {

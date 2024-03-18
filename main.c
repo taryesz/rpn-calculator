@@ -20,6 +20,8 @@ void get_formula(List* stack, List* rpn) {
     int function_open_parenthesis_id = DEFAULT_ID;
     int parsing_arguments_of_a_function = FALSE;
     int close_parenthesis_autocomplete = FALSE;
+    int arguments_counter = 0;
+    int similarity_found = FALSE;
 
     // create a variable that will store the ascii symbol's numeric value if it's a digit ascii
     int symbol_value = 0;
@@ -39,7 +41,7 @@ void get_formula(List* stack, List* rpn) {
         if (symbol_ascii == SPACE) continue;
 
         // if the symbol is an ascii of a digit or an operator symbol
-        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id, &parsing_arguments_of_a_function, &close_parenthesis_autocomplete);
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id, &parsing_arguments_of_a_function, &close_parenthesis_autocomplete, &arguments_counter, &similarity_found);
 
         // stop the input here
         if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
@@ -85,23 +87,36 @@ void calculate_rpn(List* rpn) {
         // if the parsed symbol is an operator
         else {
 
-            if (parsing_function_flag) {
+            if (iterator->is_function) {
                 printf("%c", iterator->value);
+                if (rpn->head != NULL) {
+                    if (rpn->head->is_function || rpn->head->value == NEGATE) continue;
+                    else { printf(" "); }
+                }
             }
             else {
-                // print the operator
-                if (!iterator->is_function) printf("%c", iterator->value);
+                printf("%c ", iterator->value);
             }
 
-            if (iterator->is_function && parsing_function_flag == FALSE) {
-                parsing_function_flag = TRUE;
-                printf("%c", iterator->value);
-                continue;
-            }
-            else {
-                printf(" ");
-                parsing_function_flag = FALSE;
-            }
+
+//            if (parsing_function_flag) {
+//                printf("%c", iterator->value);
+//            }
+//            else {
+//                // print the operator
+//                if (!iterator->is_function) printf("%c", iterator->value);
+//            }
+//
+//            if (iterator->is_function && parsing_function_flag == FALSE) {
+//                parsing_function_flag = TRUE;
+//                printf("%c", iterator->value);
+//                continue;
+//            }
+//            else {
+////                if (!iterator->is_function_end_symbol) continue;
+//                printf(" ");
+//                parsing_function_flag = FALSE;
+//            }
 
             // since our operands are being put on the stack, and not pushed,
             // and we need to print steps in reverse, we have to create a separate

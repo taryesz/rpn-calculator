@@ -40,6 +40,7 @@ List mirror_stack(List* stack) {
             // push a symbol to the new mirrored stack
             push(&mirrored_stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol);
             iterator = iterator->next;
+
         }
 
     }
@@ -257,7 +258,7 @@ void perform_unary_calculations(List* necessary_operands, List* stack, List* rpn
 }
 
 
-void perform_ternary_calculations(List* necessary_operands, List* stack, List* rpn, Node* iterator, int* result, int* number_of_operands) {
+void perform_ternary_calculations(List* necessary_operands, List* stack, List* rpn, int* result, int* number_of_operands) {
 
     *necessary_operands = check_priority_change(stack, TERNARY_ARITY, *number_of_operands);
 
@@ -267,24 +268,77 @@ void perform_ternary_calculations(List* necessary_operands, List* stack, List* r
 
         Node *popped = pop(necessary_operands);
 
-        if (popped->value > 0) {
-            *result = pop(necessary_operands)->value;
-            pop(necessary_operands);
-        } else {
-            Node *remove = pop(necessary_operands);
-            *result = pop(necessary_operands)->value;
-            free(remove);
-        }
+        if (popped != NULL) {
 
-        if (*result != INFINITY) {
-            int priority;
-            int is_operand;
-            int is_function;
-            int arity;
-            int is_function_end_symbol;
-            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
-        }
+            if (popped->value > IF_CONDITION) {
+                *result = pop(necessary_operands)->value;
+                pop(necessary_operands);
+            } else {
+                Node *remove = pop(necessary_operands);
+                *result = pop(necessary_operands)->value;
+                free(remove);
+            }
 
+            if (*result != INFINITY) {
+                int priority;
+                int is_operand;
+                int is_function;
+                int arity;
+                int is_function_end_symbol;
+                execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
+            }
+
+        }
+        free(popped);
+    }
+
+}
+
+
+void bubble_sort(List* operands, int ascending) {
+    Node* j;
+    for (j = operands->head; j->next != NULL; j = j->next) {
+        Node* i;
+        for (i = operands->head; i->next != NULL; i = i->next) {
+            if ((i->value > i->next->value && ascending) || (i->value < i->next->value && !ascending)) {
+                int tmp = i->value;
+                i->value = i->next->value;
+                i->next->value = tmp;
+            }
+        }
+    }
+}
+
+
+void perform_infinite_calculations(List* necessary_operands, List* stack, List* rpn, Node* iterator, int* result, int* number_of_operands) {
+
+    *necessary_operands = check_priority_change(stack, *number_of_operands, *number_of_operands);
+
+    update_number_of_operands(stack, number_of_operands);
+
+    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
+
+        // sort necessary_operands here
+        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
+        if (iterator->arity == MAX_ARITY) bubble_sort(necessary_operands, FALSE);
+
+        // get the smallest operand
+        Node *popped = pop(necessary_operands);
+
+        if (popped != NULL) {
+
+            *result = popped->value;
+
+            if (*result != INFINITY) {
+                int priority;
+                int is_operand;
+                int is_function;
+                int arity;
+                int is_function_end_symbol;
+                execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result);
+            }
+
+        }
         free(popped);
     }
 
@@ -298,15 +352,15 @@ void check_for_operator_arity(List* stack, List* rpn, Node* iterator, int* numbe
 
     List necessary_operands;
 
-    if (iterator->arity == UNARY_ARITY) {
-        perform_unary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+    if (iterator != NULL) {
+        if (iterator->arity == UNARY_ARITY) {
+            perform_unary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+        } else if (iterator->arity == BINARY_ARITY) {
+            perform_binary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
+        } else if (iterator->arity == TERNARY_ARITY) {
+            perform_ternary_calculations(&necessary_operands, stack, rpn, &result, number_of_operands);
+        } else {
+            perform_infinite_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+        }
     }
-    else if (iterator->arity == BINARY_ARITY) {
-        perform_binary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
-    }
-    else if (iterator->arity == TERNARY_ARITY) {
-        perform_ternary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-        // TODO: implement IF() function in order to print steps correctly
-    }
-
 }
