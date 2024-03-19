@@ -561,7 +561,27 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
                 // ignore
             }
 
+            if (stack->head->value != OPEN_PARENTHESES) {
+
+                Node *argument = stack->head;
+
+                do {
+
+                    Node *popped = pop(stack);
+
+                    int counted_arity = popped->arity;
+
+                    put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, counted_arity, popped->id, popped->is_function_end_symbol, flag);
+
+                    argument = argument->next;
+
+                } while (argument != NULL && argument->value != OPEN_PARENTHESES);
+
+            }
+
         }
+
+
 
         arguments->head->value += 1;
 
