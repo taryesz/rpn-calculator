@@ -70,6 +70,7 @@
 
 #define MIN_ARITY (-10)
 #define MAX_ARITY (-11)
+#define DEFAULT_ARGUMENT_COUNT 1
 
 // all possible functions used
 enum function_names {

@@ -312,15 +312,15 @@ void bubble_sort(List* operands, int ascending) {
 
 void perform_infinite_calculations(List* necessary_operands, List* stack, List* rpn, Node* iterator, int* result, int* number_of_operands) {
 
-    *necessary_operands = check_priority_change(stack, *number_of_operands, *number_of_operands);
+    *necessary_operands = check_priority_change(stack, iterator->arity, *number_of_operands);
 
     update_number_of_operands(stack, number_of_operands);
 
     if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
 
         // sort necessary_operands here
-        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
-        if (iterator->arity == MAX_ARITY) bubble_sort(necessary_operands, FALSE);
+//        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
+//        if (iterator->arity == MAX_ARITY) bubble_sort(necessary_operands, FALSE);
 
         // get the smallest operand
         Node *popped = pop(necessary_operands);
@@ -353,14 +353,14 @@ void check_for_operator_arity(List* stack, List* rpn, Node* iterator, int* numbe
     List necessary_operands;
 
     if (iterator != NULL) {
-        if (iterator->arity == UNARY_ARITY) {
-            perform_unary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-        } else if (iterator->arity == BINARY_ARITY) {
-            perform_binary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
-        } else if (iterator->arity == TERNARY_ARITY) {
-            perform_ternary_calculations(&necessary_operands, stack, rpn, &result, number_of_operands);
-        } else {
+//        if (iterator->arity == UNARY_ARITY) {
+//            perform_unary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+//        } else if (iterator->arity == BINARY_ARITY) {
+//            perform_binary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
+//        } else if (iterator->arity == TERNARY_ARITY) {
+//            perform_ternary_calculations(&necessary_operands, stack, rpn, &result, number_of_operands);
+//        } else {
             perform_infinite_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-        }
+//        }
     }
 }

@@ -9,7 +9,7 @@
 
 
 // parse the formula
-void get_formula(List* stack, List* rpn) {
+void get_formula(List* stack, List* rpn, List* arguments) {
 
     int negate_function_found = FALSE;
     int negate_functions_counter = 0;
@@ -41,7 +41,7 @@ void get_formula(List* stack, List* rpn) {
         if (symbol_ascii == SPACE) continue;
 
         // if the symbol is an ascii of a digit or an operator symbol
-        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id, &parsing_arguments_of_a_function, &close_parenthesis_autocomplete, &arguments_counter, &similarity_found);
+        check_symbol_type(symbol_ascii, &symbol_value, &parsing_operand, stack, rpn, arguments, &flag, &negate_function_found, &negate_functions_counter, &functions_counter, &iterator, &last_function, &last_symbol, &function_open_parenthesis_id, &parsing_arguments_of_a_function, &close_parenthesis_autocomplete, &arguments_counter, &similarity_found);
 
         // stop the input here
         if (symbol_ascii == EQUATION_STOP_SYMBOL) break;
@@ -152,6 +152,7 @@ int main() {
     // create and initiate a stack for operators and a rpn-stack for rpn equation
     List stack = {NULL, NULL};
     List rpn = {NULL, NULL};
+    List arguments = {NULL, NULL};
 
     // get the number of future equations from a user
     const int number_of_formulas = get_number_of_formulas();
@@ -164,7 +165,7 @@ int main() {
         rpn.tail = NULL;
 
         // parse the input equation and turn it into an RPN one
-        get_formula(&stack, &rpn);
+        get_formula(&stack, &rpn, &arguments);
 
         // print the RPN equation when completed
         print(&rpn);
