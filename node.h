@@ -17,6 +17,7 @@ typedef struct Node {
     int is_function_end_symbol;
     int id;
     int arity;
+    int function_id;
     struct Node* next;
     struct Node* previous;
 

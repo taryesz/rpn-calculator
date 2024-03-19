@@ -77,7 +77,7 @@ void calculate_rpn(List* rpn) {
             int flag = FALSE;
 
             // save the operand on stack
-            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol, &flag);
+            put(&stack, iterator->value, iterator->priority, iterator->is_operand, iterator->is_function, iterator->arity, iterator->id, iterator->is_function_end_symbol, iterator->function_id, &flag);
 
             // keep track of how many operands we have already put on stack
             ++number_of_operands;
