@@ -224,7 +224,7 @@ void print(List* stack) {
             }
         }
 
-//        printf("(%d)", iterator->function_id);
+        printf("(%d)", iterator->id);
         previous_id = iterator->id;
         previous_symbol = iterator;
 

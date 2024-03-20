@@ -38,6 +38,8 @@ void set_function_id(int* function_id, int value) {
     *function_id = value;
 }
 
+
+// return the name of a function
 char* get_function_name(int function) {
 
     if (function == N) {
@@ -159,104 +161,86 @@ void convert_to_rpn(List* stack, List* rpn, int value, int priority, int is_oper
 }
 
 
-void execute_function(int function_id, const char* reserved_functions, List* stack, List* rpn, int* flag, int* negate_function_found, List* arguments) {
+// find the length of a word
+void calculate_function_name_length(const char* function, int* array_length) {
+    while (function[*array_length] != STRING_TERMINATOR) {
+        (*array_length)++;
+    }
+}
 
-    int priority;
-    int is_operand;
-    int is_function;
-    int arity;
-    int is_function_end_symbol;
-    int id = DEFAULT_ID;
 
-    int function_parsing_flag = TRUE;
+// add the function to the RPN stack
+void save_function(List* stack, List* rpn, List* arguments, int priority, int is_operand, int is_function, int id, int arity, int function_id, int* flag, int* is_function_end_symbol, int* function_parsing_flag) {
 
+    // get the appropriate function name
+    char* function = get_function_name(function_id);
+
+    // find the length of the function's name
+    int array_length = 0;
+    calculate_function_name_length(function, &array_length);
+
+    // iterate through the function name and add each letter to the RPN stack
+    for (int counter = array_length - 1; counter >= 0; counter--) {
+
+        // the last symbol from the function's name has to indicate that it's
+        if (counter == array_length - 1) *is_function_end_symbol = TRUE;
+        else *is_function_end_symbol = FALSE;
+
+        // add the symbol to the RPN stack
+        convert_to_rpn(stack, rpn, function[counter], priority, is_operand, is_function, arity, id, *is_function_end_symbol, function_id, flag, function_parsing_flag, arguments);
+
+        // keep the same id for each symbol of the same function
+        id = stack->head->id;
+
+    }
+
+    push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
+
+}
+
+
+// parse a function and save it on RPN stack
+void execute_function(int function_id, List* stack, List* rpn, List* arguments, int* flag, int* negate_function_found) {
+
+    // create property variables
+    int priority, is_operand, is_function, arity, is_function_end_symbol, id = DEFAULT_ID, function_parsing_flag = TRUE;
+
+    // set the properties
     set_priority(&priority, FUNCTION_PRIORITY);
     set_is_operand(&is_operand, FALSE);
     set_is_function(&is_function, TRUE);
-
+    set_arity(&arity, INFINITY);
     set_id(rpn, &id, is_function, INFINITY);
 
-    if (function_id == N) {
-        set_is_function(&is_function, FALSE);
-        set_is_function_end_symbol(&is_function_end_symbol, TRUE);
-        set_arity(&arity, UNARY_ARITY);
-        convert_to_rpn(stack, rpn, reserved_functions[function_id], priority, is_operand, is_function, arity, id, is_function_end_symbol, function_id, flag, &function_parsing_flag, arguments);
-        *negate_function_found = TRUE;
+    // create a variable that will be passed to 'save_function()'
+    int function = INFINITY;
 
-        // TODO: push(arguments, 1 , ... )
-        push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
-
-    }
-    else if (function_id == IF) {
-
-        set_arity(&arity, TERNARY_ARITY);
-        char* func = get_function_name(function_id);
-
-        int array_length = 0;
-        while (func[array_length] != STRING_TERMINATOR) {
-            array_length++;
-        }
-
-        for (int i = array_length - 1; i >= 0; i--) {
-            // set the last symbol's property to TRUE
-            if (i == 1) set_is_function_end_symbol(&is_function_end_symbol, TRUE); // TODO: replace 1 with some variable
-            else { set_is_function_end_symbol(&is_function_end_symbol, FALSE); }
-            convert_to_rpn(stack, rpn, func[i], priority, is_operand, is_function, arity, id, is_function_end_symbol, function_id, flag, &function_parsing_flag, arguments);
-            id = stack->head->id;
-        }
-
-//        printf("added IF to new stack\n");
-        // TODO: push(arguments, 1 , ... )
-        push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
-
-    }
-    else if (function_id == MIN) {
-
-        set_arity(&arity, INFINITY);
-        char* func = get_function_name(function_id);
-
-        int array_length = 0;
-        while (func[array_length] != STRING_TERMINATOR) {
-            array_length++;
-        }
-
-        for (int i = array_length - 1; i >= 0; i--) {
-            // set the last symbol's property to TRUE
-            if (i == 2) set_is_function_end_symbol(&is_function_end_symbol, TRUE); // TODO: replace 2 with some variable
-            else { set_is_function_end_symbol(&is_function_end_symbol, FALSE); }
-            convert_to_rpn(stack, rpn, func[i], priority, is_operand, is_function, arity, id, is_function_end_symbol, function_id, flag, &function_parsing_flag, arguments);
-            id = stack->head->id;
-        }
-
-//        printf("added MIN to new stack\n");
-        // TODO: push(arguments, 1 , ... )
-        push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
-
-    }
-    else if (function_id == MAX) {
-
-        set_arity(&arity, INFINITY);
-        char* func = get_function_name(function_id);
-
-        int array_length = 0;
-        while (func[array_length] != STRING_TERMINATOR) {
-            array_length++;
-        }
-
-        for (int i = array_length - 1; i >= 0; i--) {
-            // set the last symbol's property to TRUE
-            if (i == 2) set_is_function_end_symbol(&is_function_end_symbol, TRUE); // TODO: replace 2 with some variable
-            else { set_is_function_end_symbol(&is_function_end_symbol, FALSE); }
-            convert_to_rpn(stack, rpn, func[i], priority, is_operand, is_function, arity, id, is_function_end_symbol, function_id, flag, &function_parsing_flag, arguments);
-            id = stack->head->id;
-        }
-
-//        printf("added MAX to new stack\n");
-        // TODO: push(arguments, 1 , ... )
-        push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
-
+    // check which function is being parsed right now
+    switch (function_id) {
+        case N:
+            set_arity(&arity, UNARY_ARITY);
+            set_is_function(&is_function, FALSE);
+            function = N;
+            *negate_function_found = TRUE;
+            break;
+        case IF:
+            set_arity(&arity, TERNARY_ARITY);
+            function = IF;
+            break;
+        case MIN:
+            function = MIN;
+            break;
+        case MAX:
+            function = MAX;
+            break;
+        default:
+            return;  // unexpected behaviour
     }
 
+    // add the function to the RPN stack
+    save_function(stack, rpn, arguments, priority, is_operand, is_function, id, arity, function, flag, &is_function_end_symbol, &function_parsing_flag);
+
+    // set the flag to false
     function_parsing_flag = FALSE;
 
 }
@@ -281,7 +265,7 @@ void compare_function_names(int symbol_ascii, List *stack, List *rpn, int *flag,
 
             if (current_function[*iterator] == STRING_TERMINATOR) {
 
-                execute_function(function_id, *functions, stack, rpn, flag, negate_function_found, arguments);
+                execute_function(function_id, stack, rpn, arguments, flag, negate_function_found);
 
                 *iterator = 0;
                 *last_function = *functions_counter;
@@ -311,16 +295,23 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
 
 
 // close all the parentheses after finishing parsing the inside of a function (this function is used when the N function's argument was another function)
-void process_arguments(List* stack, List* rpn, int* priority, const int* is_operand, const int* is_function, const int* arity, const int* is_function_end_symbol, int* function_id, int* flag, int* last_symbol, int* function_open_parenthesis_id, int* negate_functions_counter, int* parsing_arguments_of_a_function, int* close_parenthesis_autocomplete, List* arguments) {
+void process_arguments(List* stack, List* rpn, int* priority, const int* is_operand, const int* is_function, const int* arity, const int* is_function_end_symbol, int* function_id, int* flag, int* last_symbol, int* function_open_parenthesis_id, int* negate_functions_counter, int* parsing_arguments_of_a_function, int* close_parenthesis_autocomplete, List* arguments, Node* iterator) {
 
     // if the counter of found functions is not 0
     if (*parsing_arguments_of_a_function) {
 
+//        printf("awsd\n");
+
         // if the stack exists
         if (stack->head != NULL) {
 
+//            printf("xyz\n");
+
             // if the top of the stack is a function
-            if (stack->head->is_function || stack->head->value == NEGATE) {
+//            if (stack->head->is_function || stack->head->value == NEGATE) {
+            if (iterator->is_function || iterator->value == NEGATE) {
+
+//                printf("abc\n");
 
                 // decrement the number of found functions
                 (*parsing_arguments_of_a_function)--;
@@ -375,7 +366,7 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
             if (popped->value == OPEN_PARENTHESES) {
 
                 // if we finished parsing the inside of a function, we need to close all the open parentheses
-                process_arguments(stack, rpn, priority, &is_operand, &is_function, &arity, &is_function_end_symbol, &function_id, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete, arguments);
+                process_arguments(stack, rpn, priority, &is_operand, &is_function, &arity, &is_function_end_symbol, &function_id, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete, arguments, stack->head);
 
                 break;
 
@@ -563,7 +554,18 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
 
             }
             else {
-                // ignore
+                if (stack->head->next->value == NEGATE) {
+//                    free(pop(stack));
+                    // ignore
+//                    printf("what: %d", *parsing_arguments_of_a_function);
+                    process_arguments(stack, rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol,
+                                      &function_id, flag, last_symbol, function_open_parenthesis_id,
+                                      negate_functions_counter, parsing_arguments_of_a_function,
+                                      close_parenthesis_autocomplete, arguments, stack->head->next);
+
+//                    printf("KKK:\n");
+//                    print(stack);
+                }
             }
 
             if (stack->head->value != OPEN_PARENTHESES) {
@@ -662,9 +664,12 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
 //
 //            }
 //        }
+
         // Update the last_symbol
         *last_symbol = symbol_ascii;
+
     }
+
 }
 
 
@@ -694,9 +699,42 @@ void check_for_negate_function(List *stack, List *rpn, int *flag, int *negate_fu
 
                         // increment the number of 'N' functions
                         *negate_functions_counter += 1;
+//
+//                        printf("found an N\n");
+//                        print(stack);
+//                        printf("\n");
 
                     }
+                    else {
 
+                        // increment number of parentheses we will need to close later
+                        (*parsing_arguments_of_a_function)++;
+
+                        // add the missing open parenthesis
+                        check_for_operator(OPEN_PARENTHESES, stack, rpn, arguments, flag, negate_function_found, functions_counter,
+                                           iterator, last_function, last_symbol, function_open_parenthesis_id,
+                                           negate_functions_counter, parsing_arguments_of_a_function,
+                                           close_parenthesis_autocomplete, similarity_found);
+
+                        // increment the number of 'N' functions
+                        *negate_functions_counter += 1;
+                    }
+
+                }
+                // TODO: THIS WAS ADDED AND IT FIXED " N N ( 13 ) . "
+                else {
+
+                    // increment number of parentheses we will need to close later
+                    (*parsing_arguments_of_a_function)++;
+
+                    // add the missing open parenthesis
+                    check_for_operator(OPEN_PARENTHESES, stack, rpn, arguments, flag, negate_function_found, functions_counter,
+                                   iterator, last_function, last_symbol, function_open_parenthesis_id,
+                                   negate_functions_counter, parsing_arguments_of_a_function,
+                                   close_parenthesis_autocomplete, similarity_found);
+
+                    // increment the number of 'N' functions
+                    *negate_functions_counter += 1;
                 }
 
             }
