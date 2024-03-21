@@ -130,7 +130,7 @@ List check_priority_change(List* stack, int arity, int number_of_operands) {
             popped = pop(stack);
 
             // push the symbol to a temporary stack
-            push(&temporary_stack, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, popped->function_id);
+            if (popped != NULL) push(&temporary_stack, popped->value, popped->priority, popped->is_operand, popped->is_function, popped->arity, popped->id, popped->is_function_end_symbol, popped->function_id);
 
             // increment the variable
             counter++;
@@ -184,44 +184,47 @@ void perform_basic_operation(List* necessary_operands, List* stack, List* rpn, N
     update_number_of_operands(stack, number_of_operands);
 
     // if both operands exist
-    if (necessary_operands->head != NULL && necessary_operands->tail != NULL) {
+    if (necessary_operands->head != NULL) {
 
-        Node* first_operand = pop(necessary_operands);
-        Node* second_operand = pop(necessary_operands);
+        if (necessary_operands->head->next != NULL) {
 
-        // if the operator is an '*'
-        if (iterator->value == ASTERISK) *result = first_operand->value * second_operand->value;
-        // if the operator is a '/'
-        else if (iterator->value == SLASH) {
+            Node *first_operand = pop(necessary_operands);
+            Node *second_operand = pop(necessary_operands);
 
-            // if the divisor is 0
-            if (second_operand->value == ZERO) {
-                printf("ERROR\n");
-                *division_by_zero = TRUE;
-                return;
-            } else {
-                *result = first_operand->value / second_operand->value;
+            // if the operator is an '*'
+            if (iterator->value == ASTERISK) *result = first_operand->value * second_operand->value;
+                // if the operator is a '/'
+            else if (iterator->value == SLASH) {
+
+                // if the divisor is 0
+                if (second_operand->value == ZERO) {
+                    printf("ERROR\n");
+                    *division_by_zero = TRUE;
+                    return;
+                } else {
+                    *result = first_operand->value / second_operand->value;
+                }
+
+            }
+                // if the operator is a '+'
+            else if (iterator->value == PLUS) *result = first_operand->value + second_operand->value;
+                // if the operator is a '-'
+            else if (iterator->value == MINUS) *result = first_operand->value - second_operand->value;
+
+            if (*result != INFINITY) {
+                int priority;
+                int is_operand;
+                int is_function;
+                int arity;
+                int is_function_end_symbol;
+                int function_id;
+                execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result, &function_id);
             }
 
+            free(first_operand);
+            free(second_operand);
+
         }
-        // if the operator is a '+'
-        else if (iterator->value == PLUS) *result = first_operand->value + second_operand->value;
-        // if the operator is a '-'
-        else if (iterator->value == MINUS) *result = first_operand->value - second_operand->value;
-
-        if (*result != INFINITY) {
-            int priority;
-            int is_operand;
-            int is_function;
-            int arity;
-            int is_function_end_symbol;
-            int function_id;
-            execute_operation(rpn, &priority, &is_operand, &is_function, &arity, &is_function_end_symbol, *result, &function_id);
-        }
-
-        free(first_operand);
-        free(second_operand);
-
     }
 
 }
@@ -266,19 +269,22 @@ void perform_conditional(List* necessary_operands, List* stack, List* rpn, int* 
 
     update_number_of_operands(stack, number_of_operands);
 
-    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
+//    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
+
+    if (necessary_operands->head != NULL) {
 
         Node *popped = pop(necessary_operands);
 
         if (popped != NULL) {
 
             if (popped->value > IF_CONDITION) {
-                *result = pop(necessary_operands)->value;
-                pop(necessary_operands);
+                if (necessary_operands->head != NULL) *result = pop(necessary_operands)->value;
+                if (necessary_operands->head != NULL) pop(necessary_operands);
             } else {
-                Node *remove = pop(necessary_operands);
-                *result = pop(necessary_operands)->value;
-                free(remove);
+                if (necessary_operands->head != NULL) {
+                    Node *remove = pop(necessary_operands);
+                }
+                if (necessary_operands->head != NULL) *result = pop(necessary_operands)->value;
             }
 
             if (*result != INFINITY) {
@@ -401,24 +407,18 @@ void check_for_operator_arity(List* stack, List* rpn, Node* iterator, int* numbe
 
         if (iterator->function_id == N) {
             perform_negation(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-//            printf("a\n");
         }
         else if (iterator->function_id == IF) {
             perform_conditional(&necessary_operands, stack, rpn, &result, number_of_operands);
-//            printf("b\n");
         }
         else if (iterator->function_id == MIN) {
             perform_minimum(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-//            printf("c\n");
         }
         else if (iterator->function_id == MAX) {
             perform_maximum(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-//            printf("e\n");
         }
         else { // simple operators ('+', '/', '*' and '-') go here
-//            printf("huh\n");
             perform_basic_operation(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
-//            printf("f\n");
         }
 
     }

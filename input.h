@@ -144,6 +144,7 @@ void convert_to_rpn(List* stack, List* rpn, int value, int priority, int is_oper
 //                printf("yeah: %c | %d\n", popped->value, counted_arity);
             }
             else if (popped->is_function && same_function_flag) {
+//                free(pop(arguments));
 //                printf("here: %c | %d\n", popped->value, counted_arity);
                 // keep the counted arity as is
             }
@@ -400,11 +401,10 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
 
                 if (stack->head != NULL) {
                     if (stack->head->is_function || !argument_arity_flag) {
-                        push(arguments, counted_arity->value, counted_arity->priority, counted_arity->is_operand, counted_arity->is_function, counted_arity->arity, counted_arity->id, counted_arity->is_function_end_symbol, counted_arity->function_id);
+                        if (counted_arity != NULL) push(arguments, counted_arity->value, counted_arity->priority, counted_arity->is_operand, counted_arity->is_function, counted_arity->arity, counted_arity->id, counted_arity->is_function_end_symbol, counted_arity->function_id);
                     }
                 }
 
-//                if (!argument_arity_flag) push(arguments, counted_arity->value, counted_arity->priority, counted_arity->is_operand, counted_arity->is_function, counted_arity->arity, counted_arity->id, counted_arity->is_function_end_symbol, counted_arity->function_id);
                 // if we finished parsing the inside of a function, we need to close all the open parentheses
                 process_arguments(stack, rpn, priority, &is_operand, &is_function, &arity, &is_function_end_symbol, &function_id, flag, last_symbol, function_open_parenthesis_id, negate_functions_counter, parsing_arguments_of_a_function, close_parenthesis_autocomplete, arguments, stack->head);
 
@@ -420,11 +420,14 @@ void process_parenthesis(int symbol_ascii, List* stack, List* rpn, int* priority
                 // save the symbol to the RPN stack
                 set_id(rpn, &id, popped->is_function, popped->value);
 
-                if (popped->is_function) {
+                if (popped->is_function || popped->value == NEGATE) {
                     finished_parsing_function = popped->is_function_end_symbol;
                 }
                 else {
-                    if (counted_arity != NULL) push(arguments, counted_arity->value, counted_arity->priority, counted_arity->is_operand, counted_arity->is_function, counted_arity->arity, counted_arity->id, counted_arity->is_function_end_symbol, counted_arity->function_id);
+                    if (counted_arity != NULL) {
+                        push(arguments, counted_arity->value, counted_arity->priority, counted_arity->is_operand, counted_arity->is_function, counted_arity->arity, counted_arity->id, counted_arity->is_function_end_symbol, counted_arity->function_id);
+                        counted_arity = NULL; // ????
+                    }
                 }
 
                 if (popped != NULL) {
@@ -596,7 +599,12 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
                 Node *argument = stack->head;
 
                 // have to delete the head of the 'arguments' stack in order to keep the right track of arity
-                int counted_arity = pop(arguments)->value; // free()
+//                print(arguments);
+                Node* popped_argument_counter = pop(arguments);
+                int counted_arity = popped_argument_counter->value; // free()
+//                printf("huh: %d\n", counted_arity);
+//                print(arguments);
+                free(popped_argument_counter);
 
                 do {
 
@@ -644,13 +652,17 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
                     // get the latest symbol from the stack
                     Node *popped = pop(stack);
 
-                    int counted_arity;
+                    int counted_arity = INFINITY;
 
                     // if the symbol is a negate function, remove the head from 'arguments'
                     // 'cause technically negation is also a function
-                    if (popped->value == NEGATE) counted_arity = pop(arguments)->value;
-                    // or else keep its original arity
-                    else counted_arity = popped->arity;
+                    if (popped != NULL) {
+                        if (popped->value == NEGATE) {
+                            if (arguments->head != NULL) counted_arity = pop(arguments)->value;
+                        }
+                        // or else keep its original arity
+                        else counted_arity = popped->arity;
+                    }
 
                     // save the parsed argument
                     put(rpn, popped->value, popped->priority, popped->is_operand, popped->is_function, counted_arity, popped->id, popped->is_function_end_symbol, popped->function_id, flag);
@@ -666,31 +678,18 @@ void check_for_operator(int symbol_ascii, List *stack, List *rpn, List* argument
 
         }
 
-        arguments->head->value += 1;
-
-//        printf("STATS:\n");
+        if (arguments->head != NULL) arguments->head->value += 1;
+        ;
 //        print(arguments);
 //        print(stack);
 //        print(rpn);
 //        printf("---\n");
-
-        /*  TODO:
-         *
-         *      (*) check if the comma's previous is a function
-         *          yes -> pop(arguments), set the letters' arity to the value stored on the head of the stack
-         *          no -> ignore
-         *      found any comma? (doesn't really matter which one 'internal' or 'external')
-         *          update the 'arguments' head value
-         *      found another function? -> push a new element to the stack 'arguments'
-         *      go back to (*)
-         *
-         */
-
-
-        // Update the last_symbol
-        *last_symbol = symbol_ascii;
+//        printf("STATS:\n")
 
     }
+
+    // Update the last_symbol
+    if (last_symbol != NULL) *last_symbol = symbol_ascii;
 
 }
 
