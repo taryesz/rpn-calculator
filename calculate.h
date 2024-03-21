@@ -93,8 +93,7 @@ void fill_necessary_operands_list(List* stack, List* necessary_operands, int ari
         Node* necessary_operand = pop(stack);
         int flag = FALSE;
         if (necessary_operand != NULL) {
-            put(necessary_operands, necessary_operand->value, necessary_operand->priority,
-                necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, necessary_operand->is_function_end_symbol, necessary_operand->function_id, &flag);
+            put(necessary_operands, necessary_operand->value, necessary_operand->priority, necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, necessary_operand->is_function_end_symbol, necessary_operand->function_id, &flag);
         }
         free(necessary_operand);
     }
@@ -320,7 +319,7 @@ void perform_minimum(List* necessary_operands, List* stack, List* rpn, Node* ite
 
     update_number_of_operands(stack, number_of_operands);
 
-    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
+//    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
 
         // sort necessary_operands here
 //        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
@@ -346,7 +345,7 @@ void perform_minimum(List* necessary_operands, List* stack, List* rpn, Node* ite
 
         }
         free(popped);
-    }
+//    }
 
 }
 
@@ -357,12 +356,15 @@ void perform_maximum(List* necessary_operands, List* stack, List* rpn, Node* ite
 
     update_number_of_operands(stack, number_of_operands);
 
-    if (necessary_operands->head != NULL && necessary_operands->head->next != NULL && necessary_operands->tail != NULL) {
+//    printf("BEFORE:\n");
+//    print(necessary_operands);
+//    printf("---\n");
 
-        // sort necessary_operands here
-//        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
-//        if (iterator->arity == MAX_ARITY) bubble_sort(necessary_operands, FALSE);
-        bubble_sort(necessary_operands, FALSE);
+    bubble_sort(necessary_operands, FALSE);
+
+//    printf("SORTED:\n");
+//    print(necessary_operands);
+//    printf("---\n");
 
         // get the smallest operand
         Node *popped = pop(necessary_operands);
@@ -383,7 +385,7 @@ void perform_maximum(List* necessary_operands, List* stack, List* rpn, Node* ite
 
         }
         free(popped);
-    }
+//    }
 
 }
 
@@ -399,29 +401,25 @@ void check_for_operator_arity(List* stack, List* rpn, Node* iterator, int* numbe
 
         if (iterator->function_id == N) {
             perform_negation(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+//            printf("a\n");
         }
         else if (iterator->function_id == IF) {
             perform_conditional(&necessary_operands, stack, rpn, &result, number_of_operands);
+//            printf("b\n");
         }
         else if (iterator->function_id == MIN) {
             perform_minimum(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+//            printf("c\n");
         }
         else if (iterator->function_id == MAX) {
             perform_maximum(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
+//            printf("e\n");
         }
         else { // simple operators ('+', '/', '*' and '-') go here
+//            printf("huh\n");
             perform_basic_operation(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
+//            printf("f\n");
         }
 
-
-//        if (iterator->arity == UNARY_ARITY) {
-//            perform_unary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-//        } else if (iterator->arity == BINARY_ARITY) {
-//            perform_binary_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands, division_by_zero);
-//        } else if (iterator->arity == TERNARY_ARITY) {
-//            perform_ternary_calculations(&necessary_operands, stack, rpn, &result, number_of_operands);
-//        } else {
-//            perform_infinite_calculations(&necessary_operands, stack, rpn, iterator, &result, number_of_operands);
-//        }
     }
 }

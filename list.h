@@ -211,20 +211,46 @@ void print(List* stack) {
         }
         else {
             // TODO: 'M' & 'I' have the same id's, while the 'N' has a different one
-            if (iterator->is_function || iterator->value == 'N') {
-                if (iterator->id != previous_id && (previous_symbol->is_function || previous_symbol->value == 'N')) printf(" ");
-                printf("%c", iterator->value);
-                printing_function = 1;
-            } else {
-                if (printing_function) printf(" %c ", iterator->value);
-                else {
-                    printf("%c ", iterator->value);
+
+            if (iterator->is_function) {
+
+                if (iterator->is_function_end_symbol) {
+                    if (iterator->function_id == 2 || iterator->function_id == 3) {
+                        printf("%c", iterator->value);
+                        printf("%d ", iterator->arity);
+                    }
+                    else {
+                        printf("%c ", iterator->value);
+                    }
                 }
-                printing_function = 0;
+                else {
+                    printf("%c", iterator->value);
+                }
+
             }
+            else {
+                printf("%c ", iterator->value);
+            }
+
+
+//            if (iterator->is_function || iterator->value == 'N') {
+//                if (iterator->id != previous_id && (previous_symbol->is_function || previous_symbol->value == 'N'))
+//                {
+//                    printf("%d ", iterator->arity);
+////                    printf(" ");
+//                }
+//                printf("%c", iterator->value);
+//                printing_function = 1;
+//            } else {
+//                if (printing_function) printf(" %c ", iterator->value);
+//                else {
+//                    printf("%c ", iterator->value);
+//                }
+//                printing_function = 0;
+//            }
         }
 
-        printf("(%d)", iterator->id);
+//        printf("(%d)", iterator->arity);
         previous_id = iterator->id;
         previous_symbol = iterator;
 

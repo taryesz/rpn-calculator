@@ -65,6 +65,8 @@ void calculate_rpn(List* rpn) {
 
     int parsing_function_flag = FALSE;
 
+    int new_function_flag = FALSE;
+
     do {
 
         // get the first symbol from RPN equation
@@ -88,35 +90,25 @@ void calculate_rpn(List* rpn) {
         else {
 
             if (iterator->is_function) {
-                printf("%c", iterator->value);
-                if (rpn->head != NULL) {
-                    if (rpn->head->is_function || rpn->head->value == NEGATE) continue;
-                    else { printf(" "); }
+
+                if (iterator->is_function_end_symbol) {
+                    if (iterator->function_id == MIN || iterator->function_id == MAX) {
+                        printf("%c", iterator->value);
+                        printf("%d ", iterator->arity);
+                    }
+                    else {
+                        printf("%c ", iterator->value);
+                    }
                 }
+                else {
+                    printf("%c", iterator->value);
+                    continue;
+                }
+
             }
             else {
                 printf("%c ", iterator->value);
             }
-
-
-//            if (parsing_function_flag) {
-//                printf("%c", iterator->value);
-//            }
-//            else {
-//                // print the operator
-//                if (!iterator->is_function) printf("%c", iterator->value);
-//            }
-//
-//            if (iterator->is_function && parsing_function_flag == FALSE) {
-//                parsing_function_flag = TRUE;
-//                printf("%c", iterator->value);
-//                continue;
-//            }
-//            else {
-////                if (!iterator->is_function_end_symbol) continue;
-//                printf(" ");
-//                parsing_function_flag = FALSE;
-//            }
 
             // since our operands are being put on the stack, and not pushed,
             // and we need to print steps in reverse, we have to create a separate
