@@ -7,9 +7,6 @@
 
 #endif //RPN_CALCULATOR_QUANTITY_H
 
-#include "constants.h"
-#include <stdio.h>
-
 
 // inspiration: https://www.geeksforgeeks.org/program-that-allows-integer-input-only/
 int get_number_of_formulas() {
@@ -35,6 +32,6 @@ int get_number_of_formulas() {
 
     };
 
-    return (user_input_value);
+    return user_input_value;
 
 };

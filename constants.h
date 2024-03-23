@@ -68,9 +68,8 @@
 #define DEFAULT_ID (-1)
 #define IF_CONDITION 0
 
-#define MIN_ARITY (-10)
-#define MAX_ARITY (-11)
 #define DEFAULT_ARGUMENT_COUNT 1
+#define UNDEFINED INFINITY
 
 // all possible functions used
 enum function_names {

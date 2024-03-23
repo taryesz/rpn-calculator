@@ -93,7 +93,7 @@ void fill_necessary_operands_list(List* stack, List* necessary_operands, int ari
         Node* necessary_operand = pop(stack);
         int flag = FALSE;
         if (necessary_operand != NULL) {
-            put(necessary_operands, necessary_operand->value, necessary_operand->priority, necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, necessary_operand->is_function_end_symbol, necessary_operand->function_id, &flag);
+            put(necessary_operands, necessary_operand->value, necessary_operand->priority, necessary_operand->is_operand, necessary_operand->is_function, necessary_operand->arity, necessary_operand->id, necessary_operand->is_function_end_symbol, necessary_operand->function_id);
         }
         free(necessary_operand);
     }
@@ -330,7 +330,7 @@ void perform_minimum(List* necessary_operands, List* stack, List* rpn, Node* ite
         // sort necessary_operands here
 //        if (iterator->arity == MIN_ARITY) bubble_sort(necessary_operands, TRUE);
 //        if (iterator->arity == MAX_ARITY) bubble_sort(necessary_operands, FALSE);
-        bubble_sort(necessary_operands, TRUE);
+        if (necessary_operands != NULL) bubble_sort(necessary_operands, TRUE);
 
         // get the smallest operand
         Node *popped = pop(necessary_operands);
@@ -350,7 +350,7 @@ void perform_minimum(List* necessary_operands, List* stack, List* rpn, Node* ite
             }
 
         }
-        free(popped);
+        if (popped != NULL);
 //    }
 
 }
@@ -366,7 +366,7 @@ void perform_maximum(List* necessary_operands, List* stack, List* rpn, Node* ite
 //    print(necessary_operands);
 //    printf("---\n");
 
-    bubble_sort(necessary_operands, FALSE);
+    if (necessary_operands != NULL) bubble_sort(necessary_operands, FALSE);
 
 //    printf("SORTED:\n");
 //    print(necessary_operands);
@@ -390,7 +390,7 @@ void perform_maximum(List* necessary_operands, List* stack, List* rpn, Node* ite
             }
 
         }
-        free(popped);
+        if (popped != NULL) free(popped);
 //    }
 
 }
