@@ -3,17 +3,29 @@
 class node {
 private:
     int content;
+    int priority;
+    bool operand;
     node* next;
 
 public:
 
     node() {
         this->content = 0;
+        this->priority = 0;
+        this->operand = false;
         this->next = nullptr;
     }
 
     void set_content(int value) {
         this->content = value;
+    }
+
+    void set_priority(int value) {
+        this->priority = value;
+    }
+
+    void set_operand(int value) {
+        this->operand = value;
     }
 
     void set_next(node* value) {
@@ -22,6 +34,14 @@ public:
 
     int get_content() const {
         return this->content;
+    }
+
+    int get_priority() const {
+        return this->priority;
+    }
+
+    bool is_operand() const {
+        return this->operand;
     }
 
     node* get_next() {
@@ -36,13 +56,15 @@ private:
     node* head;
     node* tail;
 
-    void set_node(int content, bool method) {
+    void set_node(int content, int priority, bool operand, bool method) {
 
         // create a new node
         auto* symbol = new node();
 
         // give the node some properties
         symbol->set_content(content);
+        symbol->set_priority(priority);
+        symbol->set_operand(operand);
 
         // if the stack is empty ...
         if (head == nullptr) {
@@ -105,23 +127,40 @@ public:
         return this->tail;
     }
 
-    void put(int content) {
+    void put(int content, int priority, int operand) {
 
         // create a variable that will tell a setter to *put* the element
         const bool method = true;
 
         // set the node
-        set_node(content, method);
+        set_node(content, priority, operand, method);
 
     }
 
-    void push(int content) {
+    void push(int content, int priority, int operand) {
 
         // create a variable that will tell a setter to *push* the element
         const bool method = false;
 
         // set the node
-        set_node(content, method);
+        set_node(content, priority, operand, method);
+
+    }
+
+    node* pop() {
+
+        if (this->head == nullptr) return nullptr;
+
+        node* popped = this->head;
+
+        if (this->head == this->tail) {
+            this->head = nullptr;
+            this->tail = nullptr;
+        }
+        else this->head = this->head->get_next();
+
+        popped->set_next(nullptr);
+        return popped;
 
     }
 
@@ -135,7 +174,9 @@ public:
         }
 
         while (iterator != nullptr) {
-            printf("%d ", iterator->get_content());
+            if (iterator->is_operand()) printf("%d ", iterator->get_content());
+            else printf("%c ", iterator->get_content());
+
             iterator = iterator->get_next();
         }
 
@@ -184,7 +225,7 @@ int main() {
         operators->clear();
         arguments->clear();
 
-        parse_formula(output);
+        parse_formula(operators, output);
 
         output->print();
 

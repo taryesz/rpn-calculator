@@ -4,3 +4,20 @@
 #define STOP_QUANTITY_INPUT '\n'
 #define STOP_FORMULA_INPUT '.'
 #define SPACE ' '
+
+enum priority {
+    zeroth_priority,
+    first_priority,
+    second_priority,
+    third_priority,
+    forth_priority
+};
+
+enum operation {
+    addition = '+',
+    subtraction = '-',
+    multiplication = '*',
+    division = '/',
+    open_parenthesis = '(',
+    close_parenthesis = ')'
+};
