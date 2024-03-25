@@ -1,0 +1,6 @@
+#define ASCII_DIGIT_RANGE_START 48
+#define ASCII_DIGIT_RANGE_FINISH 57
+#define FACTOR 10
+#define STOP_QUANTITY_INPUT '\n'
+#define STOP_FORMULA_INPUT '.'
+#define SPACE ' '
