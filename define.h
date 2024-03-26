@@ -4,6 +4,7 @@
 #define STOP_QUANTITY_INPUT '\n'
 #define STOP_FORMULA_INPUT '.'
 #define SPACE ' '
+#define STRING_TERMINATOR '\0'
 
 enum priority {
     zeroth_priority,
@@ -19,5 +20,13 @@ enum operation {
     multiplication = '*',
     division = '/',
     open_parenthesis = '(',
-    close_parenthesis = ')'
+    close_parenthesis = ')',
+};
+
+enum function {
+    negation,
+    conditional,
+    minimum,
+    maximum,
+    stop_flag
 };

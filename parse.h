@@ -1,4 +1,131 @@
-void parse_operator(stack* operators, stack* output, int symbol) {
+/*const char* get_reserved_function_name(int function) {
+
+    switch (function) {
+        case negation: return "N";
+        case conditional: return "IF";
+        case minimum: return "MIN";
+        case maximum: return "MAX";
+        default: return "";
+    }
+
+}
+
+
+int count_reserved_functions() {
+    return stop_flag;
+}
+
+
+// find the length of a word
+int count_reserved_function_name_length(const char* function) {
+    int string_length = 0;
+    while (function[string_length] != STRING_TERMINATOR) ++string_length;
+    return string_length;
+}
+
+
+const char** get_reserved_functions() {
+
+    const int reserved_functions_quantity = count_reserved_functions();
+    const char** functions = new const char*[reserved_functions_quantity];
+
+    // if (functions == nullptr) return nullptr;
+
+    for (int i = 0; i < reserved_functions_quantity; i++) functions[i] = get_reserved_function_name(i);
+
+    return functions;
+
+}
+
+
+void save_function() {
+
+    // get the appropriate function name
+    char* function = get_reserved_function_name(function_id);
+
+    // find the length of the function's name
+    const int function_name_length = count_reserved_function_name_length(function);
+
+    // iterate through the function name and add each letter to the RPN stack
+    for (int counter = function_name_length; counter >= 0; counter--) {
+
+    }
+
+}
+
+
+void save_function(List* stack, List* rpn, List* arguments, int priority, int is_operand, int is_function, int id, int arity, int function_id, int* flag, int* is_function_end_symbol, int* function_parsing_flag) {
+
+    // get the appropriate function name
+    char* function = get_function_name(function_id);
+
+    // find the length of the function's name
+    int array_length = 0;
+    calculate_function_name_length(function, &array_length);
+
+    // iterate through the function name and add each letter to the RPN stack
+    for (int counter = array_length - 1; counter >= 0; counter--) {
+
+        // the last symbol from the function's name has to indicate that it's
+        if (counter == array_length - 1) *is_function_end_symbol = TRUE;
+        else *is_function_end_symbol = FALSE;
+
+        // add the symbol to the RPN stack
+        convert_to_rpn(stack, rpn, function[counter], priority, is_operand, is_function, arity, id, *is_function_end_symbol, function_id, flag, function_parsing_flag, arguments);
+
+        // keep the same id for each symbol of the same function
+        id = stack->head->id;
+
+    }
+
+    push(arguments, DEFAULT_ARGUMENT_COUNT, OPERAND_PRIORITY, TRUE, FALSE, INFINITY, id, TRUE, INFINITY);
+
+}
+
+
+void compare_functions(int symbol, int* last_symbol_detected_id, int* last_function_detected_id, bool* similarity_detected_flag) {
+
+    int function_id = *last_function_detected_id;
+
+    const char **functions = get_reserved_functions();
+    const int reserved_functions_quantity = count_reserved_functions();
+
+    for (; function_id < reserved_functions_quantity;) {
+
+        const char* current_function = functions[function_id];
+
+        if (symbol == current_function[*last_symbol_detected_id]) {
+            *similarity_detected_flag = true;
+            ++(*last_symbol_detected_id);
+
+            if (current_function[*last_symbol_detected_id] == STRING_TERMINATOR) {
+
+                // TODO: exec
+
+                *last_symbol_detected_id = 0;
+                *last_function_detected_id = 0;
+                return;
+
+            }
+
+            *last_function_detected_id = function_id;
+            break;
+
+        }
+        else {
+
+            (*similarity_detected_flag) ? (*similarity_detected_flag = false) : (*last_symbol_detected_id = 0);
+            ++function_id;
+
+        }
+
+    }
+
+
+}
+*/
+
+void parse_operator(stack* operators, stack* output, int symbol, int* last_symbol_detected_id, int* last_function_detected_id, bool* similarity_detected_flag) {
 
     int symbol_priority;
     int symbol_is_operand = false;
@@ -13,18 +140,19 @@ void parse_operator(stack* operators, stack* output, int symbol) {
 
         while (iterator != nullptr) {
 
+            iterator = iterator->get_next();
+
             node* popped = operators->pop();
 
             if (popped->get_content() == open_parenthesis) {
-                delete popped; // TODO: pop() doesnt create a new node, does it?
+                delete popped;
                 break;
             }
             else {
+                operators->print();
                 output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
                 delete popped;
             }
-
-            iterator = iterator->get_next();
 
         }
 
@@ -32,22 +160,43 @@ void parse_operator(stack* operators, stack* output, int symbol) {
     else {
 
         if (symbol == addition || symbol == subtraction) symbol_priority = first_priority;
-        if (symbol == multiplication || symbol == division) symbol_priority = second_priority;
+        else if (symbol == multiplication || symbol == division) symbol_priority = second_priority;
+        else symbol_priority = third_priority; // when the symbol is a function
 
         node* iterator = operators->get_head();
 
         while (iterator != nullptr) {
 
+            operators->print();
+
             node* popped = operators->pop();
 
+            printf("popped symbol: %c\n", popped->get_content());
+            printf("trying to insert: %c\n", symbol);
+
             if (popped->get_content() == open_parenthesis || popped->get_priority() < symbol_priority) {
+                printf("found '(' or lower priority operator (%c)\n", popped->get_content());
                 operators->push(popped->get_content(), popped->get_priority(), popped->is_operand());
                 break;
             }
 
+            printf("added operator (%c) to output\n", popped->get_content());
             output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
             iterator = iterator->get_next();
 
+        }
+
+        printf("added operator (%c) to operators\n", symbol);
+
+        // this piece of code allows us to handle situations when there are the same priority operators one after another:
+        // this kind of situation is not natural for normal mathematical expressions, although, when we use functions,
+        // and we have parsed the function, we the operand that now need to be put onto RPN stack, well, isn't put.
+        if (operators->get_head() != nullptr) {
+            if (operators->get_head()->get_priority() == symbol_priority) {
+                node* tmp = operators->pop();
+                output->put(tmp->get_content(), tmp->get_priority(), tmp->is_operand());
+                delete tmp;
+            }
         }
 
         operators->push(symbol, symbol_priority, symbol_is_operand);
@@ -71,7 +220,8 @@ void parse_operand(stack* output, int* numeric_symbol, bool* parsing_operand_fla
 
 
 // this function will check if the symbol is an operand/operator and parse it later on
-bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symbol, bool* parsing_operand_flag) {
+bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symbol, bool* parsing_operand_flag,
+                  int* last_symbol_detected_id, int* last_function_detected_id, bool* similarity_detected_flag) {
 
     // if the symbol is a digit ...
     if (symbol >= ASCII_DIGIT_RANGE_START && symbol <= ASCII_DIGIT_RANGE_FINISH) {
@@ -105,7 +255,7 @@ bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symb
         }
 
         // if the operator symbol was given, parse it
-        parse_operator(operators, output, symbol);
+        parse_operator(operators, output, symbol, last_symbol_detected_id, last_function_detected_id, similarity_detected_flag);
 
     }
 
@@ -120,6 +270,16 @@ void parse_formula(stack* operators, stack* output) {
     // create a variable that stores the value of parsed digits
     int numeric_symbol = 0;
 
+    // create a variable that stores an id of a symbol inside a function name string
+    int last_symbol_detected_id = 0;
+
+    // create a variable that stores an id of a function that was most recently found
+    int last_function_detected_id = 0;
+
+    // create a flag that will indicate whether in case of found similarities between strings,
+    // will the program continue comparing symbols from the same function, or omit it and compare with the next one
+    bool similarity_detected_flag = false;
+
     // create a flag that will indicate whether an operand is being parsed or not
     bool parsing_operand_flag = false;
 
@@ -133,7 +293,8 @@ void parse_formula(stack* operators, stack* output) {
         if (symbol == SPACE) continue;
 
         // if the symbol is valid, proceed to parsing it
-        if (parse_symbol(operators, output, symbol, &numeric_symbol, &parsing_operand_flag)) break;
+        if (parse_symbol(operators, output, symbol, &numeric_symbol, &parsing_operand_flag, &last_symbol_detected_id,
+                         &last_function_detected_id, &similarity_detected_flag)) break;
 
     }
 
