@@ -125,7 +125,10 @@ void compare_functions(int symbol, int* last_symbol_detected_id, int* last_funct
 }
 */
 
-void parse_operator(stack* operators, stack* output, int symbol, int* last_symbol_detected_id, int* last_function_detected_id, bool* similarity_detected_flag) {
+void add_missing_closing_parentheses(stack* operators, stack* output, int* additional_parentheses_counter);
+
+
+void parse_operator(stack* operators, stack* output, int symbol, int* additional_parentheses_counter) {
 
     int symbol_priority;
     int symbol_is_operand = false;
@@ -149,48 +152,87 @@ void parse_operator(stack* operators, stack* output, int symbol, int* last_symbo
                 break;
             }
             else {
-                operators->print();
                 output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
                 delete popped;
             }
 
         }
 
+        // if necessary, close all the open parentheses that are left
+        add_missing_closing_parentheses(operators, output, additional_parentheses_counter);
+
     }
     else {
 
+        int parsing_function_flag = false;
+
         if (symbol == addition || symbol == subtraction) symbol_priority = first_priority;
         else if (symbol == multiplication || symbol == division) symbol_priority = second_priority;
-        else symbol_priority = third_priority; // when the symbol is a function
+        else {
+            parsing_function_flag = true;
+            symbol_priority = third_priority; // when the symbol is a function
+        }
 
         node* iterator = operators->get_head();
 
-        while (iterator != nullptr) {
+        /*
+         *
+         * TODO: when can negation function be without parentheses?
+         *
+         * 1. when its argument is a simple operand : N 10
+         * 2. when its argument is another function: N IF ( ... )
+         *      2.a. the argument could be another negation function without parentheses: N N N ( 2 ) | N N N 2
+         *      2.b. the argument could be another negation function with the parentheses: N N ( 2 )
+         *
+         * SOLUTIONS:
+         *
+         * 1. if negation doesn't have its own parenthesis:
+         *          if parsed operand and next symbol is some other operator:
+         *              add the parenthesis
+         *              close the parenthesis after the operand
+         *
+         * 2. if negation doesn't have its own parenthesis:
+         *          if another function found and the previous one is a negation function:
+         *              add the parenthesis
+         *              if ")" found (and it will be since the other functions always have parentheses):
+         *                      add closing parenthesis
+         *
+         * theoretically, the second solution should be able to handle cases 2.a & 2.b (with the help of solution 1)
+         *
+         */
 
-            operators->print();
+        while (iterator != nullptr) {
 
             node* popped = operators->pop();
 
-            printf("popped symbol: %c\n", popped->get_content());
-            printf("trying to insert: %c\n", symbol);
+            // --- this block of code makes sure that all the parentheses are handled correctly even if there are the default ones
+            if (parsing_function_flag) {
+                if (popped != nullptr) {
+                    if (popped->get_content() == negation) { // todo: this could work only for N function, we need to implement function comparer
+                        operators->push(popped->get_content(), popped->get_priority(), popped->is_operand());
+                        operators->push(open_parenthesis, forth_priority, false);
+                        ++(*additional_parentheses_counter);
+                    }
+                }
+            }
+
+            if (*additional_parentheses_counter) popped = operators->pop();
+            // ---
 
             if (popped->get_content() == open_parenthesis || popped->get_priority() < symbol_priority) {
-                printf("found '(' or lower priority operator (%c)\n", popped->get_content());
                 operators->push(popped->get_content(), popped->get_priority(), popped->is_operand());
                 break;
             }
 
-            printf("added operator (%c) to output\n", popped->get_content());
             output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
             iterator = iterator->get_next();
 
         }
 
-        printf("added operator (%c) to operators\n", symbol);
-
         // this piece of code allows us to handle situations when there are the same priority operators one after another:
         // this kind of situation is not natural for normal mathematical expressions, although, when we use functions,
         // and we have parsed the function, we the operand that now need to be put onto RPN stack, well, isn't put.
+        // TODO: does it support cases when functions are being compared??
         if (operators->get_head() != nullptr) {
             if (operators->get_head()->get_priority() == symbol_priority) {
                 node* tmp = operators->pop();
@@ -206,11 +248,24 @@ void parse_operator(stack* operators, stack* output, int symbol, int* last_symbo
 }
 
 
+void add_missing_closing_parentheses(stack* operators, stack* output, int* additional_parentheses_counter) {
+
+    // this block of code makes sure that all the added open parentheses are closed
+    if (*additional_parentheses_counter) {
+        --(*additional_parentheses_counter);
+        parse_operator(operators, output, close_parenthesis, additional_parentheses_counter);
+    }
+
+}
+
 
 // this function will put the operand on the output stack
-void parse_operand(stack* output, int* numeric_symbol, bool* parsing_operand_flag) {
+void parse_operand(stack* operators, stack* output, int* numeric_symbol, bool* parsing_operand_flag, int* additional_parentheses_counter) {
 
     output->put(*numeric_symbol, zeroth_priority, true);
+
+    // if necessary, close all the open parentheses that are left
+    add_missing_closing_parentheses(operators, output, additional_parentheses_counter);
 
     // reset the variables
     *numeric_symbol = 0;
@@ -220,8 +275,7 @@ void parse_operand(stack* output, int* numeric_symbol, bool* parsing_operand_fla
 
 
 // this function will check if the symbol is an operand/operator and parse it later on
-bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symbol, bool* parsing_operand_flag,
-                  int* last_symbol_detected_id, int* last_function_detected_id, bool* similarity_detected_flag) {
+bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symbol, bool* parsing_operand_flag, int* additional_parentheses_counter) {
 
     // if the symbol is a digit ...
     if (symbol >= ASCII_DIGIT_RANGE_START && symbol <= ASCII_DIGIT_RANGE_FINISH) {
@@ -238,7 +292,7 @@ bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symb
     else {
 
         // if the program is now parsing an operator, it firstly needs to add the parsed operand to the stack
-        if (*parsing_operand_flag) parse_operand(output, numeric_symbol, parsing_operand_flag);
+        if (*parsing_operand_flag) parse_operand(operators, output, numeric_symbol, parsing_operand_flag, additional_parentheses_counter);
 
         // if the symbol is a period, the formula was fully parsed
         if (symbol == STOP_FORMULA_INPUT) {
@@ -255,7 +309,7 @@ bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symb
         }
 
         // if the operator symbol was given, parse it
-        parse_operator(operators, output, symbol, last_symbol_detected_id, last_function_detected_id, similarity_detected_flag);
+        parse_operator(operators, output, symbol, additional_parentheses_counter);
 
     }
 
@@ -270,15 +324,8 @@ void parse_formula(stack* operators, stack* output) {
     // create a variable that stores the value of parsed digits
     int numeric_symbol = 0;
 
-    // create a variable that stores an id of a symbol inside a function name string
-    int last_symbol_detected_id = 0;
-
-    // create a variable that stores an id of a function that was most recently found
-    int last_function_detected_id = 0;
-
-    // create a flag that will indicate whether in case of found similarities between strings,
-    // will the program continue comparing symbols from the same function, or omit it and compare with the next one
-    bool similarity_detected_flag = false;
+    // create a variable that keeps track of added parentheses to the stack
+    int additional_parentheses_counter = 0;
 
     // create a flag that will indicate whether an operand is being parsed or not
     bool parsing_operand_flag = false;
@@ -293,8 +340,7 @@ void parse_formula(stack* operators, stack* output) {
         if (symbol == SPACE) continue;
 
         // if the symbol is valid, proceed to parsing it
-        if (parse_symbol(operators, output, symbol, &numeric_symbol, &parsing_operand_flag, &last_symbol_detected_id,
-                         &last_function_detected_id, &similarity_detected_flag)) break;
+        if (parse_symbol(operators, output, symbol, &numeric_symbol, &parsing_operand_flag, &additional_parentheses_counter)) break;
 
     }
 

@@ -24,7 +24,7 @@ enum operation {
 };
 
 enum function {
-    negation,
+    negation = 'N',
     conditional,
     minimum,
     maximum,
