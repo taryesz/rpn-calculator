@@ -132,10 +132,16 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
 
     int symbol_priority;
     int symbol_is_operand = false;
+    int symbol_is_function = false;
+    int symbol_is_last = true;
 
     if (symbol == open_parenthesis) {
         symbol_priority = forth_priority;
-        operators->push(symbol, symbol_priority, symbol_is_operand);
+
+        // set 'is_last':
+        if (operators->get_head() != nullptr) operators->get_head()->set_last(true);
+
+        operators->push(symbol, symbol_priority, symbol_is_operand, symbol_is_function, symbol_is_last);
     }
     else if (symbol == close_parenthesis) {
 
@@ -148,11 +154,45 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
             node* popped = operators->pop();
 
             if (popped->get_content() == open_parenthesis) {
+
+                // parse function
+                // reverse the symbol order
+                if (operators->get_head() != nullptr) {
+                    if (operators->get_head()->is_function()) {
+
+                        node* iterator_2 = operators->get_head();
+                        auto* reverse_function = new stack();
+
+                        // reverse the order of parsed function symbols
+                        while (iterator_2->is_function()) {
+                            node* popped_2 = operators->pop();
+                            reverse_function->push(popped_2->get_content(), popped_2->get_priority(), popped_2->is_operand(), popped_2->is_function(), popped_2->is_last());
+                            delete popped_2;
+                            iterator_2 = operators->get_head();
+                            if (iterator_2 == nullptr) break;
+                        }
+
+                        // add them to the output stack
+                        iterator_2 = reverse_function->get_head();
+                        while (iterator_2 != nullptr) {
+                            node* popped_2 = reverse_function->pop();
+                            output->put(popped_2->get_content(), popped_2->get_priority(), popped_2->is_operand(), popped_2->is_function(), popped_2->is_last());
+                            delete popped_2;
+                            iterator_2 = reverse_function->get_head();
+                        }
+
+                        reverse_function->clear();
+                        delete reverse_function;
+
+                    }
+                }
+
                 delete popped;
                 break;
+
             }
             else {
-                output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
+                output->put(popped->get_content(), popped->get_priority(), popped->is_operand(), popped->is_function(), popped->is_last());
                 delete popped;
             }
 
@@ -162,6 +202,7 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
         add_missing_closing_parentheses(operators, output, additional_parentheses_counter);
 
     }
+    else if (symbol == comma); // pass
     else {
 
         int parsing_function_flag = false;
@@ -170,36 +211,12 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
         else if (symbol == multiplication || symbol == division) symbol_priority = second_priority;
         else {
             parsing_function_flag = true;
+            symbol_is_function = true;
+            symbol_is_last = false;
             symbol_priority = third_priority; // when the symbol is a function
         }
 
         node* iterator = operators->get_head();
-
-        /*
-         *
-         * TODO: when can negation function be without parentheses?
-         *
-         * 1. when its argument is a simple operand : N 10
-         * 2. when its argument is another function: N IF ( ... )
-         *      2.a. the argument could be another negation function without parentheses: N N N ( 2 ) | N N N 2
-         *      2.b. the argument could be another negation function with the parentheses: N N ( 2 )
-         *
-         * SOLUTIONS:
-         *
-         * 1. if negation doesn't have its own parenthesis:
-         *          if parsed operand and next symbol is some other operator:
-         *              add the parenthesis
-         *              close the parenthesis after the operand
-         *
-         * 2. if negation doesn't have its own parenthesis:
-         *          if another function found and the previous one is a negation function:
-         *              add the parenthesis
-         *              if ")" found (and it will be since the other functions always have parentheses):
-         *                      add closing parenthesis
-         *
-         * theoretically, the second solution should be able to handle cases 2.a & 2.b (with the help of solution 1)
-         *
-         */
 
         while (iterator != nullptr) {
 
@@ -209,8 +226,8 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
             if (parsing_function_flag) {
                 if (popped != nullptr) {
                     if (popped->get_content() == negation) { // todo: this could work only for N function, we need to implement function comparer
-                        operators->push(popped->get_content(), popped->get_priority(), popped->is_operand());
-                        operators->push(open_parenthesis, forth_priority, false);
+                        operators->push(popped->get_content(), popped->get_priority(), popped->is_operand(), popped->is_function(), popped->is_last());
+                        operators->push(open_parenthesis, forth_priority, false, false, true);
                         ++(*additional_parentheses_counter);
                     }
                 }
@@ -219,13 +236,23 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
             if (*additional_parentheses_counter) popped = operators->pop();
             // ---
 
-            if (popped->get_content() == open_parenthesis || popped->get_priority() < symbol_priority) {
-                operators->push(popped->get_content(), popped->get_priority(), popped->is_operand());
-                break;
+            // if the symbol is a function, we don't need to do anything except for saving the symbol
+            if (parsing_function_flag && symbol != negation) {
+                operators->push(popped->get_content(), popped->get_priority(), popped->is_operand(), popped->is_function(), popped->is_last());
+                operators->push(symbol, symbol_priority, symbol_is_operand, symbol_is_function, symbol_is_last);
+                return;
             }
+            else {
 
-            output->put(popped->get_content(), popped->get_priority(), popped->is_operand());
-            iterator = iterator->get_next();
+                if (popped->get_content() == open_parenthesis || popped->get_priority() < symbol_priority) {
+                    operators->push(popped->get_content(), popped->get_priority(), popped->is_operand(), popped->is_function(), popped->is_last());
+                    break;
+                }
+
+                output->put(popped->get_content(), popped->get_priority(), popped->is_operand(), popped->is_function(), popped->is_last());
+                iterator = iterator->get_next();
+
+            }
 
         }
 
@@ -236,12 +263,12 @@ void parse_operator(stack* operators, stack* output, int symbol, int* additional
         if (operators->get_head() != nullptr) {
             if (operators->get_head()->get_priority() == symbol_priority) {
                 node* tmp = operators->pop();
-                output->put(tmp->get_content(), tmp->get_priority(), tmp->is_operand());
+                output->put(tmp->get_content(), tmp->get_priority(), tmp->is_operand(), tmp->is_function(), tmp->is_last());
                 delete tmp;
             }
         }
 
-        operators->push(symbol, symbol_priority, symbol_is_operand);
+        operators->push(symbol, symbol_priority, symbol_is_operand, symbol_is_function, symbol_is_last);
 
     }
 
@@ -262,7 +289,7 @@ void add_missing_closing_parentheses(stack* operators, stack* output, int* addit
 // this function will put the operand on the output stack
 void parse_operand(stack* operators, stack* output, int* numeric_symbol, bool* parsing_operand_flag, int* additional_parentheses_counter) {
 
-    output->put(*numeric_symbol, zeroth_priority, true);
+    output->put(*numeric_symbol, zeroth_priority, true, false, true);
 
     // if necessary, close all the open parentheses that are left
     add_missing_closing_parentheses(operators, output, additional_parentheses_counter);
@@ -300,7 +327,7 @@ bool parse_symbol(stack* operators, stack* output, int symbol, int* numeric_symb
             node* iterator = operators->get_head();
 
             while (iterator != nullptr) {
-                if (iterator->get_content() != open_parenthesis) output->put(iterator->get_content(), iterator->get_priority(), iterator->is_operand());
+                if (iterator->get_content() != open_parenthesis) output->put(iterator->get_content(), iterator->get_priority(), iterator->is_operand(), iterator->is_function(), iterator->is_last());
                 iterator = iterator->get_next();
             }
 

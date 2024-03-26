@@ -21,6 +21,7 @@ enum operation {
     division = '/',
     open_parenthesis = '(',
     close_parenthesis = ')',
+    comma = ','
 };
 
 enum function {
