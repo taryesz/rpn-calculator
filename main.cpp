@@ -1,10 +1,13 @@
 #include <iostream>
+#include "define.h"
+
 
 class node {
 private:
     int content;
     int priority;
     int arity;
+    int function_id;
     bool operand;
     bool function;
     bool last;
@@ -16,6 +19,7 @@ public:
         this->content = 0;
         this->priority = 0;
         this->arity = 0;
+        this->function_id = 0;
         this->operand = false;
         this->function = false;
         this->last = false;
@@ -32,6 +36,10 @@ public:
 
     void set_arity(int value) {
         this->arity = value;
+    }
+
+    void set_function_id(int value) {
+        this->function_id = value;
     }
 
     void set_operand(bool value) {
@@ -62,6 +70,10 @@ public:
         return this->arity;
     }
 
+    int get_function_id() const {
+        return this->function_id;
+    }
+
     bool is_operand() const {
         return this->operand;
     }
@@ -86,7 +98,7 @@ private:
     node* head;
     node* tail;
 
-    void set_node(int content, int priority, int arity, bool operand, bool function, bool last, bool method) {
+    void set_node(int content, int priority, int arity, int function_id, bool operand, bool function, bool last, bool method) {
 
         // create a new node
         auto* symbol = new node();
@@ -95,6 +107,7 @@ private:
         symbol->set_content(content);
         symbol->set_priority(priority);
         symbol->set_arity(arity);
+        symbol->set_function_id(function_id);
         symbol->set_operand(operand);
         symbol->set_function(function);
         symbol->set_last(last);
@@ -160,23 +173,23 @@ public:
         return this->tail;
     }
 
-    void put(int content, int priority, int arity, bool operand, bool function, bool last) {
+    void put(int content, int priority, int arity, int function_id, bool operand, bool function, bool last) {
 
         // create a variable that will tell a setter to *put* the element
         const bool method = true;
 
         // set the node
-        set_node(content, priority, arity, operand, function, last, method);
+        set_node(content, priority, arity, function_id, operand, function, last, method);
 
     }
 
-    void push(int content, int priority, int arity, bool operand, bool function, bool last) {
+    void push(int content, int priority, int arity, int function_id, bool operand, bool function, bool last) {
 
         // create a variable that will tell a setter to *push* the element
         const bool method = false;
 
         // set the node
-        set_node(content, priority, arity, operand, function, last, method);
+        set_node(content, priority, arity, function_id, operand, function, last, method);
 
     }
 
@@ -210,12 +223,14 @@ public:
 
             if (iterator->is_operand()) printf("%d ", iterator->get_content());
             else if (iterator->is_function()) {
-                if (iterator->is_last()) printf("%c ", iterator->get_content());
+                if ((iterator->get_function_id() == maximum || iterator->get_function_id() == minimum) && iterator->is_last()) {
+                    printf("%c%d ", iterator->get_content(), iterator->get_arity());
+                }
+                else if (iterator->is_last()) printf("%c ", iterator->get_content());
                 else printf("%c", iterator->get_content());
             }
             else printf("%c ", iterator->get_content());
 
-//            printf(" --> (%d) ", iterator->is_function());
             iterator = iterator->get_next();
 
         }
@@ -239,8 +254,8 @@ public:
 };
 
 
-#include "define.h"
 #include "input.h"
+#include "functions.h"
 #include "parse.h"
 
 

@@ -4,13 +4,13 @@
 #define STOP_QUANTITY_INPUT '\n'
 #define STOP_FORMULA_INPUT '.'
 #define SPACE ' '
-//#define DEFAULT_ARGUMENT_COUNT 2
-//#define DEFAULT_ARITY 0
+#define STRING_TERMINATOR '\0'
+#define UNDEFINED (-1)
+#define NEGATION 'N'
 
 enum arity {
     default_arity = 1
 };
-
 
 enum priority {
     zeroth_priority,
@@ -31,7 +31,7 @@ enum operation {
 };
 
 enum function {
-    negation = 'N',
+    negation,
     conditional,
     minimum,
     maximum,
