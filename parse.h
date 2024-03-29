@@ -137,6 +137,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
         else {
             parsing_function_flag = true;
             symbol_is_function = true;
+            symbol_function_id = 0;
             symbol_priority = third_priority; // when the symbol is a function
         }
 
@@ -164,7 +165,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
                 // the program popped a letter of a function above, and then pops another symbol again if *additional... is set to true
                 // so, in such a case we need to push the letter back cuz we don't want to lose it
                 if (popped->is_function() && popped->get_content() != NEGATION) operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
-                if (operators->get_head() != nullptr) popped = operators->pop();
+                if (operators->get_head() != nullptr && popped->get_content() != open_parenthesis) popped = operators->pop();
             }
             // ---
 
@@ -218,13 +219,7 @@ void add_missing_closing_parentheses(stack* operators, stack* output, stack* arg
             if (operators->get_head()->get_next() != nullptr) {
                 if (operators->get_head()->get_next()->get_function_id() == negation) {
                     --(*additional_parentheses_counter);
-//                    printf("huh\n");
-//                    operators->print();
-//                    output->print();
                     parse_operator(operators, output, arguments, close_parenthesis, additional_parentheses_counter);
-//                    printf("---\n");
-//                    operators->print();
-//                    output->print();
                 }
             }
         }
