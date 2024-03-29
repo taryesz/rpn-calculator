@@ -13,7 +13,7 @@ void bubble_sort(stack* operands, int ascending) {
 }
 
 
-void perform_calculations(stack* operands, stack* rpn, int function_type, int arity, int* critical_divisor_flag, int* result) {
+void perform_calculations(stack* operands, int function_type, int arity, int* critical_divisor_flag, int* result) {
 
     operands->print();
 
@@ -86,13 +86,13 @@ void perform_calculations(stack* operands, stack* rpn, int function_type, int ar
 void calculate(stack* rpn) {
 
     auto* operands = new stack();
-    node* iterator;
 
     int critical_divisor_flag = false;
     int result = 0;
 
     do {
 
+        node* iterator;
         iterator = rpn->pop();
         if (iterator == nullptr)  break;
 
@@ -104,7 +104,7 @@ void calculate(stack* rpn) {
             if (!iterator->is_function()) {
 
                 printf("%c ", iterator->get_content());
-                perform_calculations(operands, rpn, iterator->get_content(), iterator->get_arity(), &critical_divisor_flag, &result);
+                perform_calculations(operands, iterator->get_content(), iterator->get_arity(), &critical_divisor_flag, &result);
                 if (critical_divisor_flag) return;
 
             } else {
@@ -119,7 +119,7 @@ void calculate(stack* rpn) {
                     continue;
                 }
 
-                perform_calculations(operands, rpn, iterator->get_function_id(), iterator->get_arity(), &critical_divisor_flag, &result);
+                perform_calculations(operands, iterator->get_function_id(), iterator->get_arity(), &critical_divisor_flag, &result);
 
             }
 

@@ -58,31 +58,31 @@ public:
         this->next = value;
     }
 
-    int get_content() const {
+    [[nodiscard]] int get_content() const {
         return this->content;
     }
 
-    int get_priority() const {
+    [[nodiscard]] int get_priority() const {
         return this->priority;
     }
 
-    int get_arity() const {
+    [[nodiscard]] int get_arity() const {
         return this->arity;
     }
 
-    int get_function_id() const {
+    [[nodiscard]] int get_function_id() const {
         return this->function_id;
     }
 
-    bool is_operand() const {
+    [[nodiscard]] bool is_operand() const {
         return this->operand;
     }
 
-    bool is_function() const {
+    [[nodiscard]] bool is_function() const {
         return this->function;
     }
 
-    bool is_last() const {
+    [[nodiscard]] bool is_last() const {
         return this->last;
     }
 
@@ -157,20 +157,8 @@ public:
         this->tail = nullptr;
     }
 
-    void set_head(node* value) {
-        this->head = value;
-    }
-
-    void set_tail(node* value) {
-        this->tail = value;
-    }
-
     node* get_head() {
         return this->head;
-    }
-
-    node* get_tail() {
-        return this->tail;
     }
 
     void put(int content, int priority, int arity, int function_id, bool operand, bool function, bool last) {

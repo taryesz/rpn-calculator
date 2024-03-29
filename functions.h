@@ -55,7 +55,7 @@ const char** get_reserved_functions() {
 }
 
 
-void update_function_id(node* iterator, const char** functions, const int functions_quantity, int* function_id, int* symbol_id, bool* similarity_found_flag) {
+void update_function_id(node* iterator, const char** functions, const int functions_quantity, int* function_id, int* symbol_id) {
     for (int counter = *function_id; counter < functions_quantity; counter++) {
         for (int symbol_counter = *symbol_id; functions[counter][symbol_counter] != STRING_TERMINATOR; symbol_counter++) {
             if (iterator->get_content() == functions[counter][symbol_counter]) {
@@ -74,11 +74,10 @@ void compare_functions(stack* operators) {
     const int functions_quantity = count_reserved_functions();
     int function_id = 0;
     int symbol_id = 0;
-    bool similarity_found_flag = false;
 
     node* iterator = operators->get_head();
     while (iterator->is_function()) {
-        update_function_id(iterator, functions, functions_quantity, &function_id, &symbol_id, &similarity_found_flag);
+        update_function_id(iterator, functions, functions_quantity, &function_id, &symbol_id);
         iterator = iterator->get_next();
         if (iterator == nullptr || iterator->is_last()) break;
     }
