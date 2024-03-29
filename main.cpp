@@ -121,7 +121,7 @@ private:
 
         }
 
-        // if the stack is not empty ...
+            // if the stack is not empty ...
         else {
 
             // if the program puts the node ...
@@ -135,7 +135,7 @@ private:
 
             }
 
-            // if the program pushes the node ...
+                // if the program pushes the node ...
             else {
 
                 // connect a new node to the first node in the stack
@@ -231,6 +231,7 @@ public:
             }
             else printf("%c ", iterator->get_content());
 
+//            printf(" --> (%d) ", iterator->get_arity());
             iterator = iterator->get_next();
 
         }
@@ -257,6 +258,7 @@ public:
 #include "input.h"
 #include "functions.h"
 #include "parse.h"
+#include "calculate.h"
 
 
 int main() {
@@ -276,12 +278,13 @@ int main() {
         arguments->clear();
 
         parse_formula(operators, output, arguments);
-
         output->print();
 
-        // get input
-        // calculate
-        // print results
+        arguments->clear();
+        operators->clear();
+
+        calculate(output);
+        printf("\n");
 
     }
 

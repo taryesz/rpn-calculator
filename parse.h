@@ -43,6 +43,10 @@ void parse_argument(stack* operators, stack* output, stack* arguments, int symbo
                         }
 
                         if (arguments->get_head() != nullptr) delete arguments->pop();
+//                        printf("arguments after function-parsing: ");
+//                        arguments->print();
+//                        printf("current stack: ");
+//                        output->print();
 
                         reverse_function->clear();
                         delete reverse_function;
@@ -56,6 +60,7 @@ void parse_argument(stack* operators, stack* output, stack* arguments, int symbo
 
             }
             else {
+//                if (arguments->get_head() != nullptr) delete arguments->pop();
                 operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
                 delete popped;
                 return;
@@ -90,10 +95,15 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
 
         // set 'is_last':
         if (operators->get_head() != nullptr) {
-            // detect what kind of function is being parsed and save the id of that function into each of its letters
-            compare_functions(operators);
-            // add an element to operators stack:
-            arguments->push(default_arity, operators->get_head()->get_priority(), operators->get_head()->get_arity(), operators->get_head()->get_function_id(), operators->get_head()->is_operand(), operators->get_head()->is_function(), operators->get_head()->is_last());
+            if (operators->get_head()->is_function()) {
+                // detect what kind of function is being parsed and save the id of that function into each of its letters
+                compare_functions(operators);
+                // add an element to operators stack:
+                arguments->push(default_arity, operators->get_head()->get_priority(),
+                                operators->get_head()->get_arity(), operators->get_head()->get_function_id(),
+                                operators->get_head()->is_operand(), operators->get_head()->is_function(),
+                                operators->get_head()->is_last());
+            }
         }
 
         operators->push(symbol, symbol_priority, symbol_arity, symbol_function_id, symbol_is_operand, symbol_is_function, symbol_is_last);
@@ -135,11 +145,14 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
         while (iterator != nullptr) {
 
             node* popped = operators->pop();
+//            if (popped == nullptr) break;
 
             if (parsing_function_flag) {
                 if (popped != nullptr) {
                     if (popped->get_content() == NEGATION && popped->is_last()) { // todo: this could work only for N function, we need to implement function comparer
                         operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+                        compare_functions(operators);
+                        arguments->push(default_arity, operators->get_head()->get_priority(), operators->get_head()->get_arity(), operators->get_head()->get_function_id(), operators->get_head()->is_operand(), operators->get_head()->is_function(), operators->get_head()->is_last());
                         operators->push(open_parenthesis, forth_priority, default_arity, UNDEFINED, false, false, true);
                         ++(*additional_parentheses_counter);
                     }
@@ -151,7 +164,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
                 // the program popped a letter of a function above, and then pops another symbol again if *additional... is set to true
                 // so, in such a case we need to push the letter back cuz we don't want to lose it
                 if (popped->is_function() && popped->get_content() != NEGATION) operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
-                popped = operators->pop();
+                if (operators->get_head() != nullptr) popped = operators->pop();
             }
             // ---
 
@@ -203,9 +216,15 @@ void add_missing_closing_parentheses(stack* operators, stack* output, stack* arg
     if (*additional_parentheses_counter) {
         if (operators->get_head() != nullptr) {
             if (operators->get_head()->get_next() != nullptr) {
-                if (operators->get_head()->get_next()->get_content() == NEGATION) {
+                if (operators->get_head()->get_next()->get_function_id() == negation) {
                     --(*additional_parentheses_counter);
+//                    printf("huh\n");
+//                    operators->print();
+//                    output->print();
                     parse_operator(operators, output, arguments, close_parenthesis, additional_parentheses_counter);
+//                    printf("---\n");
+//                    operators->print();
+//                    output->print();
                 }
             }
         }
@@ -220,6 +239,8 @@ void parse_operand(stack* operators, stack* output, stack* arguments, int* numer
     // todo: throw that into a separate function
     if (operators->get_head() != nullptr) {
         if (operators->get_head()->get_content() == NEGATION && operators->get_head()->is_last()) { // todo: this could work only for N function, we need to implement function comparer
+            compare_functions(operators);
+            arguments->push(default_arity, operators->get_head()->get_priority(), operators->get_head()->get_arity(), operators->get_head()->get_function_id(), operators->get_head()->is_operand(), operators->get_head()->is_function(), operators->get_head()->is_last());
             operators->push(open_parenthesis, forth_priority, default_arity, UNDEFINED, false, false, true);
             ++(*additional_parentheses_counter);
         }
@@ -255,7 +276,7 @@ bool parse_symbol(stack* operators, stack* output, stack* arguments, int symbol,
 
     }
 
-    // if the symbol is an operator ...
+        // if the symbol is an operator ...
     else {
 
         // if the program is now parsing an operator, it firstly needs to add the parsed operand to the stack
@@ -306,8 +327,10 @@ void parse_formula(stack* operators, stack* output, stack* arguments) {
         // if the symbol is a white character, ignore it
         if (symbol == SPACE) continue;
 
-        // if the symbol is valid, proceed to parsing it
-        if (parse_symbol(operators, output, arguments, symbol, &numeric_symbol, &parsing_operand_flag, &additional_parentheses_counter)) break;
+        if (symbol >= first_visible_ascii && symbol <= final_visible_ascii) {
+            // if the symbol is valid, proceed to parsing it
+            if (parse_symbol(operators, output, arguments, symbol, &numeric_symbol, &parsing_operand_flag, &additional_parentheses_counter)) break;
+        }
 
     }
 

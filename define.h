@@ -7,6 +7,12 @@
 #define STRING_TERMINATOR '\0'
 #define UNDEFINED (-1)
 #define NEGATION 'N'
+#define CRITICAL_DIVISOR 0
+
+enum visible_ascii_range {
+    first_visible_ascii = 32,
+    final_visible_ascii = 126
+};
 
 enum arity {
     default_arity = 1

@@ -55,7 +55,6 @@ const char** get_reserved_functions() {
 }
 
 
-// todo: then, go to stack's print() and check for MIN/MAX and add arity printing
 void update_function_id(node* iterator, const char** functions, const int functions_quantity, int* function_id, int* symbol_id, bool* similarity_found_flag) {
     for (int counter = *function_id; counter < functions_quantity; counter++) {
         for (int symbol_counter = *symbol_id; functions[counter][symbol_counter] != STRING_TERMINATOR; symbol_counter++) {
@@ -91,5 +90,11 @@ void compare_functions(stack* operators) {
         iterator = iterator->get_next();
         if (iterator == nullptr || iterator->is_last()) break;
     }
+
+    // deallocate elements of functions since they were allocated dynamically
+    for (int i = 0; i < functions_quantity; i++) {
+        delete functions[i];
+    }
+    delete [] functions;
 
 }
