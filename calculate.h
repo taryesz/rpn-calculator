@@ -18,40 +18,63 @@ void perform_calculations(stack* operands, int function_type, int arity, int* cr
     operands->print();
 
     if (function_type == addition) {
-        int a = operands->pop()->get_content();
-        int b = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        node* second_operand = operands->pop();
+        int a = first_operand->get_content();
+        int b = second_operand->get_content();
         *result = a + b;
+        delete first_operand;
+        delete second_operand;
     }
     else if (function_type == subtraction) {
-        int a = operands->pop()->get_content();
-        int b = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        node* second_operand = operands->pop();
+        int a = first_operand->get_content();
+        int b = second_operand->get_content();
         *result = b - a;
+        delete first_operand;
+        delete second_operand;
     }
     else if (function_type == multiplication) {
-        int a = operands->pop()->get_content();
-        int b = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        node* second_operand = operands->pop();
+        int a = first_operand->get_content();
+        int b = second_operand->get_content();
         *result = a * b;
+        delete first_operand;
+        delete second_operand;
     }
     else if (function_type == division) {
-        int divisor = operands->pop()->get_content();
-        int divident = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        node* second_operand = operands->pop();
+        int divisor = first_operand->get_content();
+        int divident = second_operand->get_content();
         if (divisor == CRITICAL_DIVISOR) {
             printf("ERROR\n");
             *critical_divisor_flag = true;
             return;
         }
         *result = divident / divisor;
+        delete first_operand;
+        delete second_operand;
     }
     else if (function_type == negation) {
-        int a = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        int a = first_operand->get_content();
         *result = -a;
-//        printf(">>> %d\n", *result);
+        delete first_operand;
     }
     else if (function_type == conditional) {
-        int a = operands->pop()->get_content();
-        int b = operands->pop()->get_content();
-        int c = operands->pop()->get_content();
+        node* first_operand = operands->pop();
+        node* second_operand = operands->pop();
+        node* third_operand = operands->pop();
+        int a = first_operand->get_content();
+        int b = second_operand->get_content();
+        int c = third_operand->get_content();
         (c > 0) ? *result = b : *result = a;
+        delete first_operand;
+        delete second_operand;
+        delete third_operand;
     }
     else if (function_type == minimum) {
         const bool order = true;
@@ -60,10 +83,13 @@ void perform_calculations(stack* operands, int function_type, int arity, int* cr
         for (int i = 0; i < arity; i++) {
             node* popped = operands->pop();
             arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+            delete popped;
         }
         bubble_sort(arguments, order);
-        *result = arguments->pop()->get_content();
+        node* popped = arguments->pop();
+        *result = popped->get_content();
         arguments->clear();
+        delete popped;
         delete arguments;
     }
     else if (function_type == maximum) {
@@ -73,10 +99,13 @@ void perform_calculations(stack* operands, int function_type, int arity, int* cr
         for (int i = 0; i < arity; i++) {
             node* popped = operands->pop();
             arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+            delete popped;
         }
         bubble_sort(arguments, order);
-        *result = arguments->pop()->get_content();
+        node* popped = arguments->pop();
+        *result = popped->get_content();
         arguments->clear();
+        delete popped;
         delete arguments;
     }
 
@@ -128,10 +157,10 @@ void calculate(stack* rpn) {
             const bool is_last = true;
 
             operands->push(result, zeroth_priority, default_arity, UNDEFINED, is_operand, is_function, is_last);
-//            printf("pushed: ");
-//            operands->print();
 
         }
+
+        delete iterator;
 
     }
     while (true);

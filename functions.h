@@ -92,7 +92,7 @@ void compare_functions(stack* operators) {
 
     // deallocate elements of functions since they were allocated dynamically
     for (int i = 0; i < functions_quantity; i++) {
-        delete functions[i];
+        delete [] functions[i]; // memory fix here: added [] since we delete dynamic arrays
     }
     delete [] functions;
 

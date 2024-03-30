@@ -35,18 +35,13 @@ void parse_argument(stack* operators, stack* output, stack* arguments, int symbo
                         iterator_2 = reverse_function->get_head();
                         while (iterator_2 != nullptr) {
                             node *popped_2 = reverse_function->pop();
-                            if (arguments->get_head() != nullptr)
-                                popped_2->set_arity(arguments->get_head()->get_content());
+                            if (arguments->get_head() != nullptr) popped_2->set_arity(arguments->get_head()->get_content());
                             output->put(popped_2->get_content(), popped_2->get_priority(), popped_2->get_arity(), popped_2->get_function_id(), popped_2->is_operand(), popped_2->is_function(), popped_2->is_last());
                             delete popped_2;
                             iterator_2 = reverse_function->get_head();
                         }
 
                         if (arguments->get_head() != nullptr) delete arguments->pop();
-//                        printf("arguments after function-parsing: ");
-//                        arguments->print();
-//                        printf("current stack: ");
-//                        output->print();
 
                         reverse_function->clear();
                         delete reverse_function;
@@ -60,7 +55,6 @@ void parse_argument(stack* operators, stack* output, stack* arguments, int symbo
 
             }
             else {
-//                if (arguments->get_head() != nullptr) delete arguments->pop();
                 operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
                 delete popped;
                 return;
@@ -69,8 +63,9 @@ void parse_argument(stack* operators, stack* output, stack* arguments, int symbo
         }
         else {
             output->put(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
-            delete popped;
         }
+
+        delete popped;
 
     }
 
@@ -107,6 +102,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
         }
 
         operators->push(symbol, symbol_priority, symbol_arity, symbol_function_id, symbol_is_operand, symbol_is_function, symbol_is_last);
+
     }
     else if (symbol == close_parenthesis) {
         parse_argument(operators, output, arguments, symbol, additional_parentheses_counter);
@@ -145,6 +141,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
 
         while (iterator != nullptr) {
 
+//            if (operators->get_head() == nullptr) break;
             node* popped = operators->pop();
 //            if (popped == nullptr) break;
 
@@ -172,6 +169,7 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
             // if the symbol is a function, we don't need to do anything except for saving the symbol
             if (parsing_function_flag) {
                 operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+                delete popped;
                 // todo: do we need to check is the head is a function?
                 if (operators->get_head() != nullptr && operators->get_head()->is_function()) operators->get_head()->set_last(false);
                 operators->push(symbol, symbol_priority, symbol_arity, symbol_function_id, symbol_is_operand, symbol_is_function, symbol_is_last);
@@ -180,11 +178,12 @@ void parse_operator(stack* operators, stack* output, stack* arguments, int symbo
             else {
 
                 if (popped->get_content() == open_parenthesis || popped->get_priority() < symbol_priority) {
-                    operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+                    operators->push(popped->get_content(), popped->get_priority(), popped->get_arity(),popped->get_function_id(), popped->is_operand(), popped->is_function(),popped->is_last());
+                    delete popped;
                     break;
                 }
 
-                output->put(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+                output->put(popped->get_content(), popped->get_priority(), popped->get_arity(),popped->get_function_id(), popped->is_operand(), popped->is_function(),popped->is_last());
                 iterator = iterator->get_next();
 
             }

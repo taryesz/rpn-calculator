@@ -121,7 +121,7 @@ private:
 
         }
 
-            // if the stack is not empty ...
+        // if the stack is not empty ...
         else {
 
             // if the program puts the node ...
@@ -135,7 +135,7 @@ private:
 
             }
 
-                // if the program pushes the node ...
+            // if the program pushes the node ...
             else {
 
                 // connect a new node to the first node in the stack
@@ -198,35 +198,29 @@ public:
 
     }
 
+    // memory fix: changed this function to remove a memory leak
     void print() {
-
-        node* iterator = new node();
-        if (this->head != nullptr) iterator = this->head;
-        else {
-            delete iterator;
-            return;
-        }
+        node* iterator = this->head; // Start iterator from the head
 
         while (iterator != nullptr) {
-
-            if (iterator->is_operand()) printf("%d ", iterator->get_content());
-            else if (iterator->is_function()) {
+            if (iterator->is_operand()) {
+                printf("%d ", iterator->get_content());
+            } else if (iterator->is_function()) {
                 if ((iterator->get_function_id() == maximum || iterator->get_function_id() == minimum) && iterator->is_last()) {
                     printf("%c%d ", iterator->get_content(), iterator->get_arity());
+                } else if (iterator->is_last()) {
+                    printf("%c ", iterator->get_content());
+                } else {
+                    printf("%c", iterator->get_content());
                 }
-                else if (iterator->is_last()) printf("%c ", iterator->get_content());
-                else printf("%c", iterator->get_content());
+            } else {
+                printf("%c ", iterator->get_content());
             }
-            else printf("%c ", iterator->get_content());
 
-//            printf(" --> (%d) ", iterator->get_arity());
             iterator = iterator->get_next();
-
         }
 
         printf("\n");
-        delete iterator;
-
     }
 
     void clear() {
@@ -273,6 +267,10 @@ int main() {
 
         calculate(output);
         printf("\n");
+
+//        output->clear();
+//        operators->clear();
+//        arguments->clear();
 
     }
 
