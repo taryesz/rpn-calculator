@@ -82,7 +82,7 @@ void perform_calculations(stack* operands, int function_type, int arity, int* cr
         auto* arguments = new stack();
         for (int i = 0; i < arity; i++) {
             node* popped = operands->pop();
-            arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+            arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last(), popped->get_requires_additional_parenthesis());
             delete popped;
         }
         bubble_sort(arguments, order);
@@ -98,7 +98,7 @@ void perform_calculations(stack* operands, int function_type, int arity, int* cr
         auto* arguments = new stack();
         for (int i = 0; i < arity; i++) {
             node* popped = operands->pop();
-            arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last());
+            arguments->push(popped->get_content(), popped->get_priority(), popped->get_arity(), popped->get_function_id(), popped->is_operand(), popped->is_function(), popped->is_last(), popped->get_requires_additional_parenthesis());
             delete popped;
         }
         bubble_sort(arguments, order);
@@ -126,7 +126,7 @@ void calculate(stack* rpn) {
         if (iterator == nullptr)  break;
 
         if (iterator->is_operand()) {
-            operands->push(iterator->get_content(), iterator->get_priority(), iterator->get_arity(), iterator->get_function_id(), iterator->is_operand(), iterator->is_function(), iterator->is_last());
+            operands->push(iterator->get_content(), iterator->get_priority(), iterator->get_arity(), iterator->get_function_id(), iterator->is_operand(), iterator->is_function(), iterator->is_last(), iterator->get_requires_additional_parenthesis());
         }
         else {
 
@@ -155,8 +155,9 @@ void calculate(stack* rpn) {
             const bool is_operand = true;
             const bool is_function = false;
             const bool is_last = true;
+            const bool requires_additional_parenthesis = false;
 
-            operands->push(result, zeroth_priority, default_arity, UNDEFINED, is_operand, is_function, is_last);
+            operands->push(result, zeroth_priority, default_arity, UNDEFINED, is_operand, is_function, is_last, requires_additional_parenthesis);
 
         }
 

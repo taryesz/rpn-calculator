@@ -11,6 +11,7 @@ private:
     bool operand;
     bool function;
     bool last;
+    bool requires_additional_parenthesis;
     node* next;
 
 public:
@@ -23,6 +24,7 @@ public:
         this->operand = false;
         this->function = false;
         this->last = false;
+        this->requires_additional_parenthesis = false;
         this->next = nullptr;
     }
 
@@ -52,6 +54,10 @@ public:
 
     void set_last(bool value) {
         this->last = value;
+    }
+
+    void set_requires_additional_parenthesis(bool value) {
+        this->requires_additional_parenthesis = value;
     }
 
     void set_next(node* value) {
@@ -86,6 +92,10 @@ public:
         return this->last;
     }
 
+    [[nodiscard]] bool get_requires_additional_parenthesis() const {
+        return this->requires_additional_parenthesis;
+    }
+
     node* get_next() {
         return this->next;
     }
@@ -98,7 +108,7 @@ private:
     node* head;
     node* tail;
 
-    void set_node(int content, int priority, int arity, int function_id, bool operand, bool function, bool last, bool method) {
+    void set_node(int content, int priority, int arity, int function_id, bool operand, bool function, bool last, bool requires_additional_parenthesis, bool method) {
 
         // create a new node
         auto* symbol = new node();
@@ -111,6 +121,7 @@ private:
         symbol->set_operand(operand);
         symbol->set_function(function);
         symbol->set_last(last);
+        symbol->set_requires_additional_parenthesis(requires_additional_parenthesis);
 
         // if the stack is empty ...
         if (head == nullptr) {
@@ -161,23 +172,23 @@ public:
         return this->head;
     }
 
-    void put(int content, int priority, int arity, int function_id, bool operand, bool function, bool last) {
+    void put(int content, int priority, int arity, int function_id, bool operand, bool function, bool last, bool requires_additional_parenthesis) {
 
         // create a variable that will tell a setter to *put* the element
         const bool method = true;
 
         // set the node
-        set_node(content, priority, arity, function_id, operand, function, last, method);
+        set_node(content, priority, arity, function_id, operand, function, last, requires_additional_parenthesis, method);
 
     }
 
-    void push(int content, int priority, int arity, int function_id, bool operand, bool function, bool last) {
+    void push(int content, int priority, int arity, int function_id, bool operand, bool function, bool last, bool requires_additional_parenthesis) {
 
         // create a variable that will tell a setter to *push* the element
         const bool method = false;
 
         // set the node
-        set_node(content, priority, arity, function_id, operand, function, last, method);
+        set_node(content, priority, arity, function_id, operand, function, last, requires_additional_parenthesis, method);
 
     }
 
