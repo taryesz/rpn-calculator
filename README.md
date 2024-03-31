@@ -3,7 +3,7 @@
 
 This project is an implementation of Reverse Polish Notation calculator [ post-fix variant ].
 
-## Examplementary Usage
+## Exemplary Usage
 
 At first, you will need to type in a number of how many mathematical formulas you are going to calculate.
 
@@ -15,7 +15,7 @@ As the output, you will see each step of calculations, until the final result is
 
 Let's say I want to transform and calculate one "default" mathematical expression:
 
-https://latex.codecogs.com/svg.image?\frac{6}{8}&plus;1\times&space;1\times&space;7\times&space;2\times&space;3\times&space;4
+$$\frac{6}{8}&plus;1\times&space;1\times&space;7\times&space;2\times&space;3\times&space;4$$
 
 _**First input:**_ `How many formulas?`
 
