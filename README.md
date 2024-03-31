@@ -92,4 +92,4 @@ _**Output:**_
 
 ## Running Tests
 
-This repository contains a folder called "tests" where you can find 10 different `.in` files with various inputs, as well as corresponding `.out` files with the correct outputs.
+This repository contains a folder called "tests" where you can find 10 different `.in` files with various inputs.
