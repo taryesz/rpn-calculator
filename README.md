@@ -15,7 +15,7 @@ As the output, you will see each step of calculations, until the final result is
 
 Let's say I want to transform and calculate one "default" mathematical expression:
 
-$$\frac{6}{8}&plus;1\times&space;1\times&space;7\times&space;2\times&space;3\times&space;4$$
+$$\frac{6}{8}+1\times 1\times 7\times 2\times 3\times 4$$
 
 _**First input:**_ `How many formulas?`
 
