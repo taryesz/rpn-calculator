@@ -1,6 +1,6 @@
 // declarations
 void add_missing_closing_parentheses(stack* operators, stack* output, stack* arguments, int* additional_parentheses_counter);
-void add_missing_open_parenthesis(stack* operators, stack* arguments, node* symbol, int* additional_parentheses_counter, int priority, int arity, int function_id, bool is_operand, bool is_function, bool is_last, bool requires_additional_parenthesis, bool parsing_function_flag);
+void add_missing_open_parenthesis(stack* operators, stack* arguments, node* symbol, int* additional_parentheses_counter, bool parsing_function_flag);
 
 
 // this function will reverse the function's letters' order in the stack
@@ -247,7 +247,7 @@ void parse_function(stack* operators, stack* output, stack* arguments, int symbo
         if (popped == nullptr) break;
 
         // if a function (and it's a negation one) is being parsed and if the negation function didn't have its own parenthesis, add one
-        if (parsing_function_flag) add_missing_open_parenthesis(operators, arguments, popped, additional_parentheses_counter, symbol_priority, symbol_arity, symbol_function_id, symbol_is_operand, symbol_is_function, symbol_is_last, symbol_requires_additional_parenthesis, parsing_function_flag);
+        if (parsing_function_flag) add_missing_open_parenthesis(operators, arguments, popped, additional_parentheses_counter, parsing_function_flag);
 
         // if the symbol is a function, we don't need to do anything except for saving the symbol
         if (parsing_function_flag) {
@@ -366,7 +366,7 @@ void add_missing_closing_parentheses(stack* operators, stack* output, stack* arg
 
 
 // this function will add an open parenthesis if needed
-void add_missing_open_parenthesis(stack* operators, stack* arguments, node* symbol, int* additional_parentheses_counter, int priority, int arity, int function_id, bool is_operand, bool is_function, bool is_last, bool requires_additional_parenthesis, bool parsing_function_flag) {
+void add_missing_open_parenthesis(stack* operators, stack* arguments, node* symbol, int* additional_parentheses_counter, bool parsing_function_flag) {
 
     // if the head of the operators stack exists ...
     if (symbol != nullptr) {
@@ -388,9 +388,9 @@ void add_missing_open_parenthesis(stack* operators, stack* arguments, node* symb
             // add an element to the arguments stack (it means the program has found another function)
             arguments->push(default_arity, argument_counter_property, argument_counter_property, argument_counter_property, argument_counter_property, argument_counter_property, argument_counter_property, argument_counter_property);
 
-            // modify the properties so they suit the parenthesis' properties
-            priority = forth_priority;
-            is_operand = false;
+            // create and initiate the properties of an open parenthesis
+            int priority = forth_priority, arity = UNDEFINED, function_id = UNDEFINED;
+            bool is_operand = false, is_function = false, is_last = true, requires_additional_parenthesis = false;
 
             // add the parenthesis to the stack
             operators->push(open_parenthesis, priority, arity, function_id, is_operand, is_function, is_last, requires_additional_parenthesis);
@@ -413,7 +413,7 @@ void parse_operand(stack* operators, stack* output, stack* arguments, int* numer
     const bool is_operand = true, is_function = false, is_last = true, requires_additional_parenthesis = false;
 
     // if the negation function didn't have its own parenthesis, add one
-    add_missing_open_parenthesis(operators, arguments, operators->get_head(), additional_parentheses_counter, priority, arity, function_id, is_operand, is_function, is_last, requires_additional_parenthesis, false);
+    add_missing_open_parenthesis(operators, arguments, operators->get_head(), additional_parentheses_counter, false);
 
     // put the parsed operand to the output stack
     output->put(*numeric_symbol, priority, arity, function_id, is_operand, is_function, is_last, requires_additional_parenthesis);
