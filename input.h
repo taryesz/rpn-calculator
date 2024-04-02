@@ -12,12 +12,12 @@ int get_number_of_formulae() {
         int input = getchar();
 
         // convert ascii to its value
-        if (input >= ASCII_DIGIT_RANGE_START && input <= ASCII_DIGIT_RANGE_FINISH) {
-            number_of_formulae = number_of_formulae * FACTOR + (input - ASCII_DIGIT_RANGE_START);
+        if (input >= first_digit_ascii && input <= final_digit_ascii) {
+            number_of_formulae = number_of_formulae * FACTOR + (input - first_digit_ascii);
         }
 
         // if pressed 'Enter', stop the loop
-        if (input == STOP_QUANTITY_INPUT) break;
+        if (input == stop_quantity_input) break;
 
     }
 
